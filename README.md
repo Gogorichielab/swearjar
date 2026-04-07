@@ -81,6 +81,12 @@ Configure these values for local development and in Azure (Static Web App / link
 4. **Secrets**
    - Store deployment tokens and connection strings in GitHub Secrets / Azure App Settings, never in source control.
 
+5. **SWA routing configuration**
+   - The repository includes `staticwebapp.config.json` with SPA navigation fallback and API route handling for `/api/*`.
+   - When calling the backend from the frontend, use relative API paths so the app works in both local development and Azure Static Web Apps without hardcoded hostnames:
+     - `/api/logSwear`
+     - `/api/summary`
+
 ## Data model (Azure Table Storage)
 
 A practical model for swear counting uses two entity types in one table:
