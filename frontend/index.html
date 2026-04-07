@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Swear Jar</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="app-header">
+        <h1>Swear Jar</h1>
+        <p>Track your progress one clean day at a time.</p>
+      </header>
+
+      <section class="log-section" aria-labelledby="log-title">
+        <h2 id="log-title" class="section-title">Log Activity</h2>
+        <button id="log-button" class="primary-log-button" type="button">Log a Swear</button>
+      </section>
+
+      <section class="counter-grid" aria-label="Swear counters">
+        <article class="counter-card">
+          <h2>Today</h2>
+          <p id="daily-count" class="counter-value">0</p>
+        </article>
+        <article class="counter-card">
+          <h2>Total</h2>
+          <p id="total-count" class="counter-value">0</p>
+        </article>
+      </section>
+
+      <section class="progress-section" aria-labelledby="penalty-title">
+        <div class="progress-header">
+          <h2 id="penalty-title" class="section-title">Monetary Penalty</h2>
+          <p id="penalty-text" class="penalty-text">$0.00 of $10.00</p>
+        </div>
+        <div class="progress-bar-wrap" role="img" aria-label="Penalty progress toward weekly limit">
+          <div id="penalty-bar" class="progress-bar" style="width: 0%"></div>
+        </div>
+      </section>
+
+      <section class="calendar-section" aria-labelledby="calendar-title">
+        <h2 id="calendar-title" class="section-title">Calendar</h2>
+        <div id="calendar-container" class="calendar-container" aria-live="polite"></div>
+      </section>
+    </main>
+
+    <script src="./app.js" defer></script>
+  </body>
+</html>
