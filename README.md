@@ -14,14 +14,34 @@ swearjar/
 ├─ api/                       # Azure Functions app (Node/.NET/Python)
 │  ├─ host.json
 │  ├─ local.settings.json     # Local only; do not commit secrets
-│  └─ <function-name>/
-│     ├─ function.json
-│     └─ ...
+│  └─ src/
+│     ├─ functions/
+│     │  ├─ logSwear.js
+│     │  └─ summary.js
+│     └─ lib/
 ├─ .github/workflows/         # CI/CD workflow for Azure Static Web Apps
 └─ README.md
 ```
 
 > Current workflow note: `.github/workflows/azure-static-web-apps-purple-forest-00c60bc0f.yml` is currently configured with `app_location: "/"` and `api_location: ""`. If you move to `frontend/` + `api/`, update those values accordingly.
+
+## API Endpoints
+
+### `POST /api/logSwear`
+
+- **Body:**
+  - `userId` (required string)
+  - `timestamp` (optional ISO-8601 string; defaults to server time)
+- **Returns** `201` with logged event metadata.
+
+### `GET /api/summary?userId=<id>&lookbackDays=<n>`
+
+- `userId` required.
+- `lookbackDays` optional (default 180).
+- **Returns:**
+  - `todayCount`
+  - `lifetimeTotal`
+  - `calendarDays` map keyed by `YYYY-MM-DD`.
 
 ## Required environment variables
 
@@ -29,9 +49,10 @@ Configure these values for local development and in Azure (Static Web App / link
 
 | Variable | Required | Example | Purpose |
 |---|---|---|---|
-| `TABLE_STORAGE_CONNECTION_STRING` | Yes | `DefaultEndpointsProtocol=...` | Connection string used by Functions to read/write Azure Table Storage. |
-| `TABLE_STORAGE_TABLE_NAME` | Yes | `SwearEvents` | Table name that stores count entities. |
-| `FUNCTIONS_WORKER_RUNTIME` | Yes (Functions) | `node` / `dotnet-isolated` / `python` | Selects runtime for Azure Functions. |
+| `AZURE_TABLES_CONNECTION_STRING` | Yes | `DefaultEndpointsProtocol=...` | Connection string used by Functions to read/write Azure Table Storage. |
+| `SWEARJAR_TABLE_NAME` | No | `SwearLog` (default) | Table name that stores swear log entities. |
+| `DATE_TIME_MODE` | No | `UTC` (default) or `LOCAL` | Controls whether day buckets use UTC or server-local date values. |
+| `FUNCTIONS_WORKER_RUNTIME` | Yes (Functions) | `node` | Selects runtime for Azure Functions. |
 | `AzureWebJobsStorage` | Yes (Functions) | `UseDevelopmentStorage=true` or Azure Storage connection string | Required host storage account for Function triggers, logs, and runtime state. |
 | `WEBSITE_RUN_FROM_PACKAGE` | Usually in Azure | `1` | Standard Azure Functions deployment setting (managed automatically in many deploy paths). |
 
@@ -56,7 +77,7 @@ Configure these values for local development and in Azure (Static Web App / link
 1. Install Azure Functions Core Tools and your language runtime.
 2. Create/update `api/local.settings.json` with required values.
 3. Start the Functions host from the `api/` directory:
-   - `func start`
+   - `cd api && npm install && func start`
 4. Confirm API endpoints are live (commonly `http://localhost:7071/api/<route>`).
 
 ### 3) Run frontend + API together
@@ -76,7 +97,7 @@ Configure these values for local development and in Azure (Static Web App / link
    - If using a separately hosted Function App, configure the frontend to call the Function App URL and ensure CORS/auth are aligned.
 
 3. **Application settings**
-   - Add `TABLE_STORAGE_CONNECTION_STRING`, `TABLE_STORAGE_TABLE_NAME`, and function runtime settings in Azure before first production requests.
+   - Add `AZURE_TABLES_CONNECTION_STRING`, `SWEARJAR_TABLE_NAME`, and function runtime settings in Azure before first production requests.
 
 4. **Secrets**
    - Store deployment tokens and connection strings in GitHub Secrets / Azure App Settings, never in source control.
@@ -89,31 +110,27 @@ Configure these values for local development and in Azure (Static Web App / link
 
 ## Data model (Azure Table Storage)
 
-A practical model for swear counting uses two entity types in one table:
+Swear events are stored with partition key `{userId}|{day}` and a unique row key per event.
 
 ### Entity shapes
 
-### 1) Daily aggregate entity
-- `PartitionKey`: `user:{userId}` (or `global` for app-wide counter)
-- `RowKey`: `day:{YYYY-MM-DD}` (UTC date)
-- `count`: integer number of swears for that day
-- `updatedAtUtc`: ISO timestamp
-
-### 2) Running total entity
-- `PartitionKey`: `user:{userId}` (or `global`)
-- `RowKey`: `total`
-- `count`: integer lifetime total
-- `updatedAtUtc`: ISO timestamp
+### 1) Swear event entity
+- `PartitionKey`: `{userId}|{YYYY-MM-DD}` (user + UTC date)
+- `RowKey`: unique identifier per event (UUID or timestamp-based)
+- `userId`: string
+- `timestamp`: ISO timestamp of the event
 
 ### Count computation flow
 
-On each "swear" event:
+On each "swear" event (`POST /api/logSwear`):
 1. Resolve current UTC day key (for example `2026-04-07`).
-2. Upsert/increment daily entity `day:{YYYY-MM-DD}` by `+1`.
-3. Upsert/increment total entity `total` by `+1`.
-4. Return both values to the frontend (`dailyCount`, `totalCount`).
+2. Insert a new entity with partition key `{userId}|{day}`.
+3. Return logged event metadata.
 
-This keeps reads fast: one read for today + one read for lifetime (or return values after write).
+On summary requests (`GET /api/summary`):
+1. Query all entities for the user's partition keys.
+2. Aggregate by day into `calendarDays` map.
+3. Return `todayCount`, `lifetimeTotal`, and `calendarDays`.
 
 ## Troubleshooting
 
@@ -132,7 +149,7 @@ This keeps reads fast: one read for today + one read for lifetime (or return val
 ### Connection string / table errors
 
 - **`AuthenticationFailed` / `Forbidden`**: connection string key may be invalid or rotated.
-- **`TableNotFound`**: verify `TABLE_STORAGE_TABLE_NAME` exists (or create on startup).
+- **`TableNotFound`**: verify `SWEARJAR_TABLE_NAME` exists (or create on startup — the API creates it automatically on first use).
 - **`ENOTFOUND` / DNS**: check storage account endpoint suffix and network/firewall rules.
 - **Local mismatch**: ensure `local.settings.json` values are loaded by `func start` in the correct folder.
 
