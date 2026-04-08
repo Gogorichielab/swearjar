@@ -41,6 +41,7 @@ function todayKey() {
 
 module.exports = {
   DATE_TIME_MODE,
+  formatDatePart,
   normalizeTimestamp,
   todayKey
 };
