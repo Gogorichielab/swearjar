@@ -17,7 +17,7 @@ async function getTableClient() {
   }
 
   const connectionString = getEnv('AZURE_TABLES_CONNECTION_STRING');
-  const tableName = getEnv('SWEARJAR_TABLE_NAME', 'SwearLog');
+  const tableName = getEnv('SWEARJAR_TABLE_NAME', 'SwearLogs');
 
   client = TableClient.fromConnectionString(connectionString, tableName);
 
