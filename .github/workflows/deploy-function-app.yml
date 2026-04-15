@@ -64,14 +64,6 @@ jobs:
         with:
           app-name: ${{ vars.AZURE_FUNCTIONAPP_NAME }}
           package: function-app
-        env:
-          # Runtime settings
-          AzureWebJobsStorage: ${{ secrets.AZUREWEBJOBSSTORAGE }}
-          FUNCTIONS_WORKER_RUNTIME: node
-          # Application settings
-          AZURE_TABLES_CONNECTION_STRING: ${{ secrets.AZURE_TABLES_CONNECTION_STRING }}
-          APPLICATIONINSIGHTS_CONNECTION_STRING: ${{ secrets.APPLICATIONINSIGHTS_CONNECTION_STRING }}
-          DEPLOYMENT_STORAGE_CONNECTION_STRING: ${{ secrets.DEPLOYMENT_STORAGE_CONNECTION_STRING }}
 
   configure:
     name: Configure App Settings
