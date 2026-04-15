@@ -6,14 +6,14 @@ const { todayStatsHandler } = require('./functions/todayStats');
 app.http('logSwear', {
   route: 'logSwear',
   methods: ['POST'],
-  authLevel: 'function',
+  authLevel: 'anonymous',
   handler: logSwearHandler
 });
 
 app.http('todayStats', {
   route: 'todayStats',
   methods: ['GET'],
-  authLevel: 'function',
+  authLevel: 'anonymous',
   handler: todayStatsHandler
 });
 
@@ -21,6 +21,6 @@ app.http('todayStats', {
 app.http('summary', {
   route: 'summary',
   methods: ['GET'],
-  authLevel: 'function',
+  authLevel: 'anonymous',
   handler: summaryHandler
 });

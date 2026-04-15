@@ -2,15 +2,15 @@ name: Deploy Azure Function App
 
 # Deploys the SwearJar API to a standalone Azure Function App
 # hosted on an App Service Plan and configures its application settings.
+#
+# DISABLED: As of 2026-04-15, SwearJar uses SWA's managed API instead.
+# This workflow is kept for reference but should not be used.
+# The SWA deployment workflow (azure-static-web-apps-*.yml) handles API deployment.
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - "api/**"
-      - ".github/workflows/deploy-function-app.yml"
-  workflow_dispatch: # allow manual trigger
+  workflow_dispatch: # allow manual trigger only
+
+# Removed automatic push/path triggers to prevent conflicts with SWA managed API deployment
 
 permissions:
   id-token: write   # needed for Azure OIDC login
