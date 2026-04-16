@@ -100,19 +100,42 @@ function renderTrend() {
 }
 
 async function fetchTodayStats() {
-  const response = await fetch(`/api/todayStats?userId=${encodeURIComponent(state.userId)}`);
-  if (!response.ok) {
-    throw new Error(`todayStats request failed: ${response.status}`);
-  }
+  try {
+    const response = await fetch(`/api/todayStats?userId=${encodeURIComponent(state.userId)}`);
+    if (!response.ok) {
+      throw new Error(`todayStats request failed: ${response.status}`);
+    }
 
-  const payload = await response.json();
-  if (!payload.success) {
-    throw new Error(payload.error?.message || 'Could not load stats.');
-  }
+    const payload = await response.json();
+    if (!payload.success) {
+      throw new Error(payload.error?.message || 'Could not load stats.');
+    }
 
-  state.todayCount = payload.data.todayCount;
-  state.recentEvents = payload.data.recentEvents;
-  state.trend = payload.data.trend;
+    state.todayCount = payload.data.todayCount;
+    state.recentEvents = payload.data.recentEvents;
+    state.trend = payload.data.trend;
+  } catch (_todayStatsError) {
+    const response = await fetch(`/api/summary?userId=${encodeURIComponent(state.userId)}&lookbackDays=7`);
+    if (!response.ok) {
+      throw new Error(`summary request failed: ${response.status}`);
+    }
+
+    const payload = await response.json();
+    if (!payload.success) {
+      throw new Error(payload.error?.message || 'Could not load stats.');
+    }
+
+    const calendarDays = payload.data.calendarDays || {};
+    state.todayCount = Number(payload.data.todayCount || 0);
+    state.recentEvents = [];
+    state.trend = Array.from({ length: 7 }, (_, index) => {
+      const day = new Date(Date.now() - (6 - index) * 86400000).toISOString().slice(0, 10);
+      return {
+        day,
+        count: Number(calendarDays[day] || 0)
+      };
+    });
+  }
 
   updateStatsUI();
   renderRecentActivity();
