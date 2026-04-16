@@ -187,8 +187,13 @@ function renderHistory() {
 
     const time = new Date(eventIso).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
     const amount = currency(state.fineAmount);
+    const timeSpan = document.createElement('span');
+    const amountSpan = document.createElement('span');
 
-    item.innerHTML = `<span>${time}</span><span>+${amount}</span>`;
+    timeSpan.textContent = time;
+    amountSpan.textContent = `+${amount}`;
+    item.appendChild(timeSpan);
+    item.appendChild(amountSpan);
     elements.historyList.appendChild(item);
   });
 }
