@@ -141,7 +141,7 @@ function renderCoinsInJar() {
 function updateCounters() {
   state.totalAmount = state.todayCount * state.fineAmount;
 
-  elements.total.textContent = currency(state.totalAmount);
+  elements.total.textContent = `${currency(state.totalAmount)} today`;
   elements.todayCount.textContent = String(state.todayCount);
   elements.weekCount.textContent = String(state.weekCount);
   elements.recordCount.textContent = String(state.recordCount);
