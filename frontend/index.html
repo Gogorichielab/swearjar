@@ -7,47 +7,76 @@
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
-    <main class="app-shell">
-      <header class="app-header card">
-        <h1>Swearjar</h1>
-        <p>Personal accountability, one tap at a time.</p>
+    <main class="screen" aria-label="Swear Jar tracker">
+      <header class="top-bar">
+        <h1 class="app-title">Swear Jar</h1>
+        <p class="streak-badge" id="streak-badge">0 today</p>
       </header>
 
-      <section class="stats-grid" aria-label="Today stats">
-        <article class="card stat-card">
-          <h2>Today's Swear Count</h2>
-          <p id="today-count" class="stat-value">0</p>
+      <section class="total-area" aria-label="Current owed total">
+        <p class="total-label">Total owed</p>
+        <p class="total-amount" id="total">$0.00</p>
+        <p class="offenses" id="offenses">Clean slate — keep it up!</p>
+      </section>
+
+      <button class="jar-area" id="jar-area" type="button" aria-label="Tap jar to log swear">
+        <span class="reaction-bubble" id="reaction-bubble" aria-live="polite"></span>
+        <svg class="jar-svg" viewBox="0 0 200 220" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+          <defs>
+            <clipPath id="jarClip">
+              <path d="M38 68 Q36 68 34 70 L28 190 Q27 205 40 208 L160 208 Q173 205 172 190 L166 70 Q164 68 162 68 Z" />
+            </clipPath>
+          </defs>
+
+          <rect x="55" y="38" width="90" height="18" rx="5" fill="var(--lid-main)" stroke="var(--lid-stroke)" stroke-width="1.5" />
+          <rect x="60" y="34" width="80" height="10" rx="4" fill="var(--lid-top)" stroke="var(--lid-stroke)" stroke-width="1" />
+
+          <path d="M38 68 Q36 68 34 70 L28 190 Q27 205 40 208 L160 208 Q173 205 172 190 L166 70 Q164 68 162 68 Z" fill="var(--jar-body)" stroke="var(--jar-stroke)" stroke-width="2" />
+          <rect x="52" y="56" width="96" height="14" rx="3" fill="var(--jar-neck)" stroke="var(--jar-stroke)" stroke-width="1.5" />
+
+          <rect id="fill-rect" x="28" y="175" width="145" height="34" fill="var(--jar-fill)" clip-path="url(#jarClip)" opacity="0.75" />
+          <g id="coins-in-jar" clip-path="url(#jarClip)"></g>
+
+          <ellipse cx="75" cy="120" rx="8" ry="22" fill="white" opacity="0.25" />
+          <ellipse cx="68" cy="85" rx="5" ry="10" fill="white" opacity="0.2" />
+          <ellipse cx="100" cy="208" rx="60" ry="5" fill="var(--jar-rim)" opacity="0.4" />
+
+          <ellipse cx="80" cy="130" rx="16" ry="17" fill="white" stroke="var(--jar-stroke)" stroke-width="1.5" />
+          <ellipse cx="120" cy="130" rx="16" ry="17" fill="white" stroke="var(--jar-stroke)" stroke-width="1.5" />
+          <circle class="eye" id="pupil-l" cx="80" cy="132" r="7" fill="var(--eye)" />
+          <circle class="eye" id="pupil-r" cx="120" cy="132" r="7" fill="var(--eye)" />
+          <circle cx="83" cy="128" r="2.5" fill="white" />
+          <circle cx="123" cy="128" r="2.5" fill="white" />
+
+          <path id="mouth" d="M82 160 Q100 155 118 160" stroke="var(--mouth)" stroke-width="2" fill="none" stroke-linecap="round" />
+        </svg>
+        <span id="coin-el" class="coin">🪙</span>
+      </button>
+
+      <p class="tap-hint" id="tap-hint">Tap the jar to add one offense</p>
+
+      <section class="stats-row" aria-label="Daily and weekly counters">
+        <article class="stat-card">
+          <h2 class="stat-label">Today</h2>
+          <p class="stat-value" id="today-count">0</p>
         </article>
-        <article class="card stat-card">
-          <h2>Today's Jar Amount</h2>
-          <p id="today-amount" class="stat-value">$0.00</p>
+        <article class="stat-card">
+          <h2 class="stat-label">This week</h2>
+          <p class="stat-value" id="week-count">0</p>
+        </article>
+        <article class="stat-card">
+          <h2 class="stat-label">Record</h2>
+          <p class="stat-value" id="record-count">0</p>
         </article>
       </section>
 
-      <section class="card">
-        <h2 class="section-title">Log a Swear</h2>
-        <button id="log-button" class="primary-log-button" type="button">+ Log Swear</button>
-        <p id="status-message" class="status-text" aria-live="polite"></p>
-      </section>
+      <button class="add-btn" id="add-btn" type="button">Add offense — $1.00</button>
+      <button class="reset-btn" id="reset-btn" type="button">Reset jar view</button>
+      <p id="status-message" class="status-text" aria-live="polite"></p>
 
-      <section class="card">
-        <h2 class="section-title">Settings</h2>
-        <label class="settings-row" for="fine-amount">
-          Fine amount per swear ($)
-          <input id="fine-amount" type="number" min="0.01" step="0.01" value="1.00" />
-        </label>
-      </section>
-
-      <section class="card">
-        <h2 class="section-title">Recent Activity</h2>
-        <ul id="recent-activity" class="activity-list">
-          <li class="empty-state">No swears logged today.</li>
-        </ul>
-      </section>
-
-      <section class="card">
-        <h2 class="section-title">7-Day Trend</h2>
-        <div id="trend-bars" class="trend-bars" aria-label="Swears in last seven days"></div>
+      <section class="history" id="history-area" aria-label="Recent offense history">
+        <h2 class="history-label">Recent</h2>
+        <div id="history-list"></div>
       </section>
     </main>
 
