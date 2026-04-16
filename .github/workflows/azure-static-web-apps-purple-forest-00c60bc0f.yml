@@ -53,12 +53,12 @@ jobs:
           github_id_token: ${{ steps.idtoken.outputs.result }}
           ###### End of Repository/Build Configurations ######
         env:
-          # Function App runtime and data settings (propagated as SWA managed API app settings)
-          AZUREWEBJOBSSTORAGE: ${{ secrets.AZUREWEBJOBSSTORAGE }}
+          # Custom app settings for the SWA managed API (platform-reserved keys are not allowed here)
           AZURE_TABLES_CONNECTION_STRING: ${{ secrets.AZURE_TABLES_CONNECTION_STRING }}
           APPLICATIONINSIGHTS_CONNECTION_STRING: ${{ secrets.APPLICATIONINSIGHTS_CONNECTION_STRING }}
           DEPLOYMENT_STORAGE_CONNECTION_STRING: ${{ secrets.DEPLOYMENT_STORAGE_CONNECTION_STRING }}
-          FUNCTIONS_WORKER_RUNTIME: node
+          SWEARJAR_TABLE_NAME: ${{ secrets.SWEARJAR_TABLE_NAME }}
+          DATE_TIME_MODE: ${{ secrets.DATE_TIME_MODE }}
 
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
