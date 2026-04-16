@@ -11,25 +11,42 @@ function buildRowKey(eventDate) {
   return `${eventDate.toISOString()}-${crypto.randomUUID()}`;
 }
 
-function parseBody(request) {
+async function parseBody(request) {
+  if (typeof request.json === 'function') {
+    try {
+      const parsed = await request.json();
+      return parsed && typeof parsed === 'object' ? parsed : {};
+    } catch (_err) {
+      // Fall through to legacy body parsing for non-JSON or empty bodies.
+    }
+  }
+
   if (!request.body) {
     return {};
   }
 
-  if (typeof request.body === 'object') {
+  if (
+    typeof request.body === 'object' &&
+    request.body !== null &&
+    !('getReader' in request.body)
+  ) {
     return request.body;
   }
 
-  try {
-    return JSON.parse(request.body);
-  } catch (_err) {
-    throw new Error('Request body must be valid JSON.');
+  if (typeof request.body === 'string') {
+    try {
+      return JSON.parse(request.body);
+    } catch (_err) {
+      throw new Error('Request body must be valid JSON.');
+    }
   }
+
+  throw new Error('Request body must be valid JSON.');
 }
 
 async function logSwearHandler(request, context) {
   try {
-    const body = parseBody(request);
+    const body = await parseBody(request);
     const userId = typeof body.userId === 'string' ? body.userId.trim() : '';
 
     if (!userId) {
@@ -65,6 +82,9 @@ async function logSwearHandler(request, context) {
       eventTimestamp: normalized.isoTimestamp
     }, 201);
   } catch (error) {
+    if (error.message === 'Request body must be valid JSON.') {
+      return fail(400, 'VALIDATION_ERROR', error.message, { field: 'body' });
+    }
     context.error('logSwear error', error);
     return fail(500, 'INTERNAL_ERROR', 'Unable to log swear event at this time.');
   }
