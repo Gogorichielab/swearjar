@@ -60,11 +60,18 @@ body {
 }
 
 .top-bar {
+  position: relative;
   width: 100%;
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 8px;
+}
+
+.top-bar__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .app-title {
@@ -85,6 +92,53 @@ body {
   padding: 4px 10px;
   border-radius: 20px;
   border: 1px solid var(--accent-border);
+}
+
+.settings-btn {
+  border: 1px solid var(--accent-border);
+  background: transparent;
+  border-radius: 999px;
+  width: 34px;
+  height: 34px;
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.settings-btn:hover {
+  background: var(--btn-secondary-hover);
+}
+
+.settings-menu {
+  width: 100%;
+  margin-bottom: 8px;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  padding: 6px;
+  display: none;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.settings-menu.show {
+  display: flex;
+}
+
+.settings-menu__item {
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-main);
+  font-size: 0.82rem;
+  text-align: left;
+  border-radius: 8px;
+  padding: 8px 10px;
+  cursor: pointer;
+}
+
+.settings-menu__item:hover {
+  border-color: var(--card-border);
+  background: var(--btn-secondary-hover);
 }
 
 .total-area {
@@ -118,6 +172,12 @@ body {
   margin: 2px 0 0;
   font-size: 0.9rem;
   color: var(--text-muted);
+}
+
+.goal-progress {
+  margin: 4px 0 0;
+  font-size: 0.76rem;
+  color: var(--text-soft);
 }
 
 .jar-area {
@@ -352,8 +412,7 @@ body {
   flex: 1;
 }
 
-.session-strip__copy,
-.session-strip__switch {
+.session-strip__copy {
   background: transparent;
   border: 1px solid var(--accent-border);
   border-radius: 20px;
@@ -366,8 +425,7 @@ body {
   white-space: nowrap;
 }
 
-.session-strip__copy:hover,
-.session-strip__switch:hover {
+.session-strip__copy:hover {
   background: var(--btn-primary);
   color: var(--btn-primary-text);
   border-color: var(--btn-primary);

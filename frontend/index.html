@@ -10,22 +10,39 @@
     <main class="screen" aria-label="Swear Jar tracker">
       <header class="top-bar">
         <h1 class="app-title">Swear Jar</h1>
-        <p class="streak-badge" id="streak-badge">0 today</p>
+        <div class="top-bar__actions">
+          <p class="streak-badge" id="streak-badge">0 today</p>
+          <button
+            class="settings-btn"
+            id="settings-btn"
+            type="button"
+            aria-label="Open settings menu"
+            aria-haspopup="menu"
+            aria-expanded="false"
+          >
+            ⚙️
+          </button>
+        </div>
       </header>
+
+      <div class="settings-menu" id="settings-menu" role="menu" aria-label="Settings menu" hidden>
+        <button class="settings-menu__item" id="menu-change-code" type="button" role="menuitem">Change session code</button>
+        <button class="settings-menu__item" id="menu-change-donation" type="button" role="menuitem">Change donation amount</button>
+        <button class="settings-menu__item" id="menu-change-goal" type="button" role="menuitem">Set custom jar goal</button>
+      </div>
 
       <div class="session-strip" aria-label="Your session code">
         <span class="session-strip__label">Your code:</span>
         <span class="session-strip__code" id="session-code-display">—</span>
         <button class="session-strip__copy" id="session-copy-btn" type="button"
           aria-label="Copy session code to clipboard">Copy</button>
-        <button class="session-strip__switch" id="switch-jar-btn" type="button"
-          aria-label="Switch to a different jar">Switch jar</button>
       </div>
 
       <section class="total-area" aria-label="Current owed total">
         <p class="total-label">Total owed</p>
         <p class="total-amount" id="total">$0.00</p>
         <p class="offenses" id="offenses">Clean slate — keep it up!</p>
+        <p class="goal-progress" id="goal-progress">Jar goal: $0.00 of $1,000.00</p>
       </section>
 
       <button class="jar-area" id="jar-area" type="button" aria-label="Tap jar to log swear">

@@ -8,12 +8,16 @@ import {
 
 const STORAGE_KEYS = {
   fineAmount: 'swearjar:fineAmount',
-  localRecord: 'swearjar:localRecord'
+  localRecord: 'swearjar:localRecord',
+  goalAmount: 'swearjar:goalAmount',
+  goalLabel: 'swearjar:goalLabel'
 };
 
 const state = {
   userId: '',
   fineAmount: 1,
+  goalAmount: 1000,
+  goalLabel: 'Jar goal',
   todayCount: 0,
   weekCount: 0,
   recordCount: 0,
@@ -43,7 +47,15 @@ const elements = {
   coinEl: document.getElementById('coin-el'),
   historyArea: document.getElementById('history-area'),
   historyList: document.getElementById('history-list'),
-  statusMessage: document.getElementById('status-message')
+  statusMessage: document.getElementById('status-message'),
+  goalProgress: document.getElementById('goal-progress'),
+  sessionCodeDisplay: document.getElementById('session-code-display'),
+  sessionCopyButton: document.getElementById('session-copy-btn'),
+  settingsButton: document.getElementById('settings-btn'),
+  settingsMenu: document.getElementById('settings-menu'),
+  menuChangeCode: document.getElementById('menu-change-code'),
+  menuChangeDonation: document.getElementById('menu-change-donation'),
+  menuChangeGoal: document.getElementById('menu-change-goal')
 };
 
 const reactions = ['Oh my...', 'Really?!', 'Again?!', 'Tsk tsk.', 'Goodness.', 'My word!', 'Oh dear.', 'For shame!', 'Yikes.', 'Hmm.'];
@@ -62,6 +74,22 @@ function loadLocalRecord() {
     return 0;
   }
   return stored;
+}
+
+function loadGoalAmount() {
+  const value = Number.parseFloat(localStorage.getItem(STORAGE_KEYS.goalAmount));
+  if (!Number.isFinite(value) || value <= 0) {
+    return 1000;
+  }
+  return value;
+}
+
+function loadGoalLabel() {
+  const raw = localStorage.getItem(STORAGE_KEYS.goalLabel);
+  if (!raw || !raw.trim()) {
+    return 'Jar goal';
+  }
+  return raw.trim();
 }
 
 function saveLocalRecord(value) {
@@ -136,6 +164,7 @@ function renderCoinsInJar() {
 
 function updateCounters() {
   state.totalAmount = state.todayCount * state.fineAmount;
+  const goalPercent = Math.min((state.totalAmount / state.goalAmount) * 100, 100);
 
   elements.total.textContent = `${currency(state.totalAmount)} today`;
   elements.todayCount.textContent = String(state.todayCount);
@@ -152,6 +181,7 @@ function updateCounters() {
   }
 
   elements.addButton.textContent = `Add offense — ${currency(state.fineAmount)}`;
+  elements.goalProgress.textContent = `${state.goalLabel}: ${currency(state.totalAmount)} of ${currency(state.goalAmount)} (${goalPercent.toFixed(0)}%)`;
 }
 
 function updatePenalty() {
@@ -362,7 +392,7 @@ async function resetJarView() {
   }
 }
 
-function handleFineAmountChange() {
+function handleDonationAmountChange() {
   const raw = window.prompt('Set offense amount in dollars', state.fineAmount.toFixed(2));
   if (raw === null) {
     return;
@@ -382,20 +412,37 @@ function handleFineAmountChange() {
 }
 
 function renderSessionCode() {
-  const el = document.getElementById('session-code-display');
-  if (el) el.textContent = state.userId;
+  elements.sessionCodeDisplay.textContent = state.userId;
 }
 
 function copySessionCode() {
   navigator.clipboard.writeText(state.userId).then(() => {
-    const btn = document.getElementById('session-copy-btn');
-    if (!btn) return;
-    const original = btn.textContent;
-    btn.textContent = 'Copied!';
-    window.setTimeout(() => { btn.textContent = original; }, 1800);
+    const original = elements.sessionCopyButton.textContent;
+    elements.sessionCopyButton.textContent = 'Copied!';
+    window.setTimeout(() => { elements.sessionCopyButton.textContent = original; }, 1800);
   }).catch(() => {
     setStatus(`Your code: ${state.userId}`);
   });
+}
+
+function openSettingsMenu() {
+  elements.settingsMenu.hidden = false;
+  elements.settingsMenu.classList.add('show');
+  elements.settingsButton.setAttribute('aria-expanded', 'true');
+}
+
+function closeSettingsMenu() {
+  elements.settingsMenu.classList.remove('show');
+  elements.settingsMenu.hidden = true;
+  elements.settingsButton.setAttribute('aria-expanded', 'false');
+}
+
+function toggleSettingsMenu() {
+  if (elements.settingsMenu.hidden) {
+    openSettingsMenu();
+    return;
+  }
+  closeSettingsMenu();
 }
 
 function closeOnboarding(overlay, callback) {
@@ -499,25 +546,69 @@ function resolveSession() {
   });
 }
 
-function switchSession() {
-  localStorage.removeItem('swearjar:userId');
-  showOnboarding((newId) => {
-    state.userId = newId;
-    renderSessionCode();
-    setStatus('Switched jar. Loading your stats...');
-    fetchTodayStats()
-      .then(() => { renderAll(); setStatus('Loaded.'); })
-      .catch(() => {
-        state.todayCount = 0; state.recentEvents = []; state.trend = [];
-        renderAll();
-        setStatus('Could not load stats for this code.', true);
-      });
-  });
+function changeSessionCode() {
+  const raw = window.prompt('Enter a new session code (WORD-WORD-1234). Leave blank to generate one.', state.userId);
+  if (raw === null) {
+    return;
+  }
+
+  const nextCode = raw.trim() ? normalizeCode(raw) : generateCode();
+  if (!isValidCode(nextCode)) {
+    setStatus('Session code must match WORD-WORD-1234.', true);
+    return;
+  }
+
+  saveSessionId(nextCode);
+  state.userId = nextCode;
+  renderSessionCode();
+  setStatus('Session code updated. Loading jar...');
+
+  fetchTodayStats()
+    .then(() => {
+      renderAll();
+      setStatus('Loaded your jar for the updated code.');
+    })
+    .catch(() => {
+      state.todayCount = 0;
+      state.weekCount = 0;
+      state.recentEvents = [];
+      state.trend = [];
+      renderAll();
+      setStatus('Could not load stats for this code.', true);
+    });
+}
+
+function changeJarGoal() {
+  const labelInput = window.prompt('Set a label for your jar goal.', state.goalLabel);
+  if (labelInput === null) {
+    return;
+  }
+
+  const nextLabel = labelInput.trim() || 'Jar goal';
+  const amountInput = window.prompt('Set your jar goal amount in dollars.', state.goalAmount.toFixed(2));
+  if (amountInput === null) {
+    return;
+  }
+
+  const nextAmount = Number.parseFloat(amountInput);
+  if (!Number.isFinite(nextAmount) || nextAmount <= 0) {
+    setStatus('Jar goal amount must be greater than $0.00.', true);
+    return;
+  }
+
+  state.goalLabel = nextLabel;
+  state.goalAmount = nextAmount;
+  localStorage.setItem(STORAGE_KEYS.goalLabel, nextLabel);
+  localStorage.setItem(STORAGE_KEYS.goalAmount, String(nextAmount));
+  updateCounters();
+  setStatus(`Updated goal: ${nextLabel} (${currency(nextAmount)}).`);
 }
 
 async function init() {
   state.userId = await resolveSession();
   state.fineAmount = loadFineAmount();
+  state.goalAmount = loadGoalAmount();
+  state.goalLabel = loadGoalLabel();
   state.recordCount = loadLocalRecord();
 
   renderSessionCode();
@@ -525,10 +616,40 @@ async function init() {
   elements.addButton.addEventListener('click', addOffense);
   elements.jarArea.addEventListener('click', addOffense);
   elements.resetButton.addEventListener('click', resetJarView);
-  elements.total.addEventListener('click', handleFineAmountChange);
+  elements.total.addEventListener('click', handleDonationAmountChange);
+  elements.sessionCopyButton.addEventListener('click', copySessionCode);
+  elements.settingsButton.addEventListener('click', toggleSettingsMenu);
+  elements.menuChangeCode.addEventListener('click', () => {
+    closeSettingsMenu();
+    changeSessionCode();
+  });
+  elements.menuChangeDonation.addEventListener('click', () => {
+    closeSettingsMenu();
+    handleDonationAmountChange();
+  });
+  elements.menuChangeGoal.addEventListener('click', () => {
+    closeSettingsMenu();
+    changeJarGoal();
+  });
 
-  document.getElementById('session-copy-btn')?.addEventListener('click', copySessionCode);
-  document.getElementById('switch-jar-btn')?.addEventListener('click', switchSession);
+  document.addEventListener('click', (event) => {
+    if (elements.settingsMenu.hidden) {
+      return;
+    }
+
+    const target = event.target;
+    if (target instanceof Node && (elements.settingsMenu.contains(target) || elements.settingsButton.contains(target))) {
+      return;
+    }
+
+    closeSettingsMenu();
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+      closeSettingsMenu();
+    }
+  });
 
   try {
     await fetchTodayStats();
