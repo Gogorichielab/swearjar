@@ -1,5 +1,12 @@
+import {
+  generateCode,
+  normalizeCode,
+  isValidCode,
+  loadSessionId,
+  saveSessionId
+} from './session.js';
+
 const STORAGE_KEYS = {
-  userId: 'swearjar:userId',
   fineAmount: 'swearjar:fineAmount',
   localRecord: 'swearjar:localRecord'
 };
@@ -40,17 +47,6 @@ const elements = {
 };
 
 const reactions = ['Oh my...', 'Really?!', 'Again?!', 'Tsk tsk.', 'Goodness.', 'My word!', 'Oh dear.', 'For shame!', 'Yikes.', 'Hmm.'];
-
-function getOrCreateUserId() {
-  const existing = localStorage.getItem(STORAGE_KEYS.userId);
-  if (existing) {
-    return existing;
-  }
-
-  const generated = `user-${crypto.randomUUID()}`;
-  localStorage.setItem(STORAGE_KEYS.userId, generated);
-  return generated;
-}
 
 function loadFineAmount() {
   const value = Number.parseFloat(localStorage.getItem(STORAGE_KEYS.fineAmount));
@@ -385,15 +381,154 @@ function handleFineAmountChange() {
   setStatus(`Fine amount updated to ${currency(value)}.`);
 }
 
+function renderSessionCode() {
+  const el = document.getElementById('session-code-display');
+  if (el) el.textContent = state.userId;
+}
+
+function copySessionCode() {
+  navigator.clipboard.writeText(state.userId).then(() => {
+    const btn = document.getElementById('session-copy-btn');
+    if (!btn) return;
+    const original = btn.textContent;
+    btn.textContent = 'Copied!';
+    window.setTimeout(() => { btn.textContent = original; }, 1800);
+  }).catch(() => {
+    setStatus(`Your code: ${state.userId}`);
+  });
+}
+
+function closeOnboarding(overlay, callback) {
+  overlay.classList.remove('visible');
+  overlay.classList.add('hiding');
+  window.setTimeout(() => { overlay.remove(); callback(); }, 350);
+}
+
+function showOnboarding(resolve) {
+  let activeCode = generateCode();
+
+  const overlay = document.createElement('div');
+  overlay.id = 'onboarding-overlay';
+  overlay.setAttribute('role', 'dialog');
+  overlay.setAttribute('aria-modal', 'true');
+  overlay.setAttribute('aria-label', 'Set up your Swear Jar');
+
+  overlay.innerHTML = `
+    <div class="onboarding-card">
+      <div class="onboarding-jar-icon" aria-hidden="true">🫙</div>
+      <h1 class="onboarding-title">Swear Jar</h1>
+      <p class="onboarding-subtitle">Your personal accountability tracker</p>
+      <div class="onboarding-panels">
+        <div id="panel-create">
+          <p class="panel-heading">Start fresh</p>
+          <p class="panel-body">We've generated a unique code for your jar. Write it down — you can use it to access your jar from any device.</p>
+          <div class="code-preview" id="code-preview" aria-label="Your generated session code">${activeCode}</div>
+          <p class="code-warning">⚠️ Anyone with this code can see your jar.</p>
+          <button class="ob-btn ob-btn--primary" id="btn-create" type="button">Create jar with this code</button>
+          <button class="ob-btn ob-btn--ghost" id="btn-shuffle" type="button">↻ Get a different code</button>
+        </div>
+        <div class="onboarding-divider" aria-hidden="true">or</div>
+        <div id="panel-join">
+          <p class="panel-heading">Rejoin your jar</p>
+          <p class="panel-body">Already have a code? Enter it below to pick up where you left off.</p>
+          <input class="ob-input" id="join-input" type="text" autocapitalize="characters"
+            aria-label="Enter your existing session code" placeholder="WORD-WORD-1234" />
+          <div class="ob-error" id="join-error" role="alert" aria-live="polite"></div>
+          <button class="ob-btn ob-btn--secondary" id="btn-join" type="button">Open this jar</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => { overlay.classList.add('visible'); });
+  });
+
+  overlay.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') e.stopPropagation();
+  });
+
+  overlay.querySelector('#btn-shuffle').addEventListener('click', () => {
+    activeCode = generateCode();
+    const preview = overlay.querySelector('#code-preview');
+    preview.classList.remove('shuffle-flash');
+    void preview.offsetWidth;
+    preview.classList.add('shuffle-flash');
+    preview.textContent = activeCode;
+    window.setTimeout(() => { preview.classList.remove('shuffle-flash'); }, 200);
+  });
+
+  overlay.querySelector('#btn-create').addEventListener('click', () => {
+    saveSessionId(activeCode);
+    closeOnboarding(overlay, () => resolve(activeCode));
+  });
+
+  const joinInput = overlay.querySelector('#join-input');
+  const joinError = overlay.querySelector('#join-error');
+
+  joinInput.addEventListener('input', () => {
+    joinInput.value = joinInput.value.toUpperCase().replace(/[^A-Z0-9-]/g, '');
+    joinError.textContent = '';
+  });
+
+  joinInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') overlay.querySelector('#btn-join').click();
+  });
+
+  overlay.querySelector('#btn-join').addEventListener('click', () => {
+    const code = normalizeCode(joinInput.value);
+    if (!isValidCode(code)) {
+      joinError.textContent = 'Please enter a valid code in the format WORD-WORD-1234.';
+      return;
+    }
+    saveSessionId(code);
+    closeOnboarding(overlay, () => resolve(code));
+  });
+}
+
+function resolveSession() {
+  return new Promise((resolve) => {
+    const existing = loadSessionId();
+    if (existing) {
+      resolve(existing);
+    } else {
+      showOnboarding(resolve);
+    }
+  });
+}
+
+function switchSession() {
+  localStorage.removeItem('swearjar:userId');
+  showOnboarding((newId) => {
+    state.userId = newId;
+    renderSessionCode();
+    setStatus('Switched jar. Loading your stats...');
+    fetchTodayStats()
+      .then(() => { renderAll(); setStatus('Loaded.'); })
+      .catch(() => {
+        state.todayCount = 0; state.recentEvents = []; state.trend = [];
+        renderAll();
+        setStatus('Could not load stats for this code.', true);
+      });
+  });
+}
+
 async function init() {
-  state.userId = getOrCreateUserId();
+  state.userId = await resolveSession();
   state.fineAmount = loadFineAmount();
   state.recordCount = loadLocalRecord();
+
+  renderSessionCode();
 
   elements.addButton.addEventListener('click', addOffense);
   elements.jarArea.addEventListener('click', addOffense);
   elements.resetButton.addEventListener('click', resetJarView);
   elements.total.addEventListener('click', handleFineAmountChange);
+
+  document.getElementById('session-copy-btn')?.addEventListener('click', copySessionCode);
+  document.getElementById('switch-jar-btn')?.addEventListener('click', switchSession);
 
   try {
     await fetchTodayStats();

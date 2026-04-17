@@ -13,6 +13,15 @@
         <p class="streak-badge" id="streak-badge">0 today</p>
       </header>
 
+      <div class="session-strip" aria-label="Your session code">
+        <span class="session-strip__label">Your code:</span>
+        <span class="session-strip__code" id="session-code-display">—</span>
+        <button class="session-strip__copy" id="session-copy-btn" type="button"
+          aria-label="Copy session code to clipboard">Copy</button>
+        <button class="session-strip__switch" id="switch-jar-btn" type="button"
+          aria-label="Switch to a different jar">Switch jar</button>
+      </div>
+
       <section class="total-area" aria-label="Current owed total">
         <p class="total-label">Total owed</p>
         <p class="total-amount" id="total">$0.00</p>
@@ -80,6 +89,6 @@
       </section>
     </main>
 
-    <script src="./app.js" defer></script>
+    <script type="module" src="./app.js" defer></script>
   </body>
 </html>
