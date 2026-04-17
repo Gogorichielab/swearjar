@@ -1,0 +1,10 @@
+# Node dependencies
+node_modules/
+npm-debug.log*
+
+# Azure Functions local config (contains secrets)
+api/local.settings.json
+
+# OS files
+.DS_Store
+Thumbs.db
