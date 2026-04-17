@@ -7,10 +7,14 @@ function escapeOdata(value) {
   return String(value).replace(/'/g, "''");
 }
 
-function parsePositiveInt(value, fallback, max) {
+function parsePositiveInt(value, fallback) {
   const n = Number.parseInt(value, 10);
   if (Number.isNaN(n) || n < 1) return fallback;
-  return max !== undefined ? Math.min(n, max) : n;
+  return n;
+}
+
+function parsePositiveIntBounded(value, fallback, max) {
+  return Math.min(parsePositiveInt(value, fallback), max);
 }
 
 async function summaryHandler(request, context) {
@@ -23,7 +27,7 @@ async function summaryHandler(request, context) {
 
     // Cap lookbackDays to 365 (one calendar year) to keep response sizes bounded
     // and prevent excessive Azure Table Storage scan queries.
-    const lookbackDays = parsePositiveInt(request.query.get('lookbackDays'), 180, 365);
+    const lookbackDays = parsePositiveIntBounded(request.query.get('lookbackDays'), 180, 365);
     const userEscaped = escapeOdata(userId);
     const startPartition = `${userEscaped}|0000-00-00`;
     const endPartition = `${userEscaped}|~~~~-~~-~~`;

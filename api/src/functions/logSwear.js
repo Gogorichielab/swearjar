@@ -71,10 +71,10 @@ async function logSwearHandler(request, context) {
     const now = Date.now();
     const eventMs = normalized.eventDate.getTime();
     if (eventMs > now + MAX_FUTURE_MS) {
-      return fail(400, 'VALIDATION_ERROR', `Timestamp cannot be more than ${MAX_FUTURE_HOURS} hour(s) in the future.`, { field: 'timestamp' });
+      return fail(400, 'VALIDATION_ERROR', `Timestamp cannot be more than ${MAX_FUTURE_HOURS} hour in the future.`, { field: 'timestamp' });
     }
     if (eventMs < now - MAX_PAST_MS) {
-      return fail(400, 'VALIDATION_ERROR', `Timestamp cannot be more than ${MAX_PAST_DAYS} day(s) in the past.`, { field: 'timestamp' });
+      return fail(400, 'VALIDATION_ERROR', `Timestamp cannot be more than ${MAX_PAST_DAYS} days in the past.`, { field: 'timestamp' });
     }
 
     const partitionKey = buildPartitionKey(userId, normalized.dayKey);
