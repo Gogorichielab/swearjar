@@ -37,7 +37,7 @@ function validateUserId(userId) {
   }
 
   if (trimmed.length > USER_ID_MAX_LENGTH) {
-    return `userId must match the format WORD-WORD-NNNN (e.g., BOLD-JAR-1234).`;
+    return `userId is too long and must match the format WORD-WORD-NNNN (max ${USER_ID_MAX_LENGTH} characters).`;
   }
 
   if (!USER_ID_PATTERN.test(trimmed)) {

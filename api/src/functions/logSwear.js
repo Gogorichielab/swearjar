@@ -5,8 +5,10 @@ const { ok, fail } = require('../lib/http');
 const { validateUserId } = require('../lib/validation');
 
 // Reject timestamps that are implausibly far in the past or future.
-const MAX_FUTURE_MS = 60 * 60 * 1000;        // 1 hour ahead (clock-skew tolerance)
-const MAX_PAST_MS   = 30 * 24 * 60 * 60 * 1000; // 30 days behind
+const MAX_FUTURE_HOURS = 1;                                    // clock-skew tolerance
+const MAX_PAST_DAYS    = 30;                                   // prevent backdating
+const MAX_FUTURE_MS    = MAX_FUTURE_HOURS * 60 * 60 * 1000;
+const MAX_PAST_MS      = MAX_PAST_DAYS * 24 * 60 * 60 * 1000;
 
 function buildPartitionKey(userId, dayKey) {
   return `${userId}|${dayKey}`;
@@ -69,10 +71,10 @@ async function logSwearHandler(request, context) {
     const now = Date.now();
     const eventMs = normalized.eventDate.getTime();
     if (eventMs > now + MAX_FUTURE_MS) {
-      return fail(400, 'VALIDATION_ERROR', 'Timestamp cannot be more than 1 hour in the future.', { field: 'timestamp' });
+      return fail(400, 'VALIDATION_ERROR', `Timestamp cannot be more than ${MAX_FUTURE_HOURS} hour(s) in the future.`, { field: 'timestamp' });
     }
     if (eventMs < now - MAX_PAST_MS) {
-      return fail(400, 'VALIDATION_ERROR', 'Timestamp cannot be more than 30 days in the past.', { field: 'timestamp' });
+      return fail(400, 'VALIDATION_ERROR', `Timestamp cannot be more than ${MAX_PAST_DAYS} day(s) in the past.`, { field: 'timestamp' });
     }
 
     const partitionKey = buildPartitionKey(userId, normalized.dayKey);

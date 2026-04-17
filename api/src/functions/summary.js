@@ -21,7 +21,8 @@ async function summaryHandler(request, context) {
       return fail(400, 'VALIDATION_ERROR', userIdError);
     }
 
-    // Cap lookbackDays to 365 to keep response sizes bounded.
+    // Cap lookbackDays to 365 (one calendar year) to keep response sizes bounded
+    // and prevent excessive Azure Table Storage scan queries.
     const lookbackDays = parsePositiveInt(request.query.get('lookbackDays'), 180, 365);
     const userEscaped = escapeOdata(userId);
     const startPartition = `${userEscaped}|0000-00-00`;
