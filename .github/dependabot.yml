@@ -1,0 +1,23 @@
+# Dependabot configuration for SwearJar
+#
+# NOTE: Dependabot does not support "first Friday of the month" natively.
+# Supported intervals are: daily | weekly (+ optional day:) | monthly.
+# "monthly" is used here for a once-a-month cadence.
+# If every-Friday updates are preferred instead, change interval to "weekly"
+# and add `day: friday` under each schedule.
+
+version: 2
+updates:
+  # Keep npm dependencies in api/ up to date
+  - package-ecosystem: "npm"
+    directory: "/api"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 10
+
+  # Keep GitHub Actions versions up to date
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 10
