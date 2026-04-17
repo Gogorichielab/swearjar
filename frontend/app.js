@@ -24,7 +24,10 @@ const state = {
   totalAmount: 0,
   recentEvents: [],
   trend: [],
-  adding: false
+  adding: false,
+  undoTimer: null,
+  undoData: null,
+  undoCountdown: 0
 };
 
 const elements = {
@@ -36,6 +39,7 @@ const elements = {
   weekCount: document.getElementById('week-count'),
   recordCount: document.getElementById('record-count'),
   addButton: document.getElementById('add-btn'),
+  undoButton: document.getElementById('undo-btn'),
   resetButton: document.getElementById('reset-btn'),
   jarArea: document.getElementById('jar-area'),
   bubble: document.getElementById('reaction-bubble'),
@@ -329,6 +333,70 @@ async function logSwear() {
   return payload.data;
 }
 
+function clearUndoTimer() {
+  if (state.undoTimer) {
+    clearInterval(state.undoTimer);
+    state.undoTimer = null;
+  }
+  state.undoData = null;
+  state.undoCountdown = 0;
+  elements.undoButton.hidden = true;
+}
+
+function startUndoTimer(logData) {
+  clearUndoTimer();
+  state.undoData = logData;
+  state.undoCountdown = 5;
+  elements.undoButton.textContent = `Undo (${state.undoCountdown}s)`;
+  elements.undoButton.hidden = false;
+  elements.undoButton.disabled = false;
+
+  state.undoTimer = setInterval(() => {
+    state.undoCountdown -= 1;
+    if (state.undoCountdown <= 0) {
+      clearUndoTimer();
+    } else {
+      elements.undoButton.textContent = `Undo (${state.undoCountdown}s)`;
+    }
+  }, 1000);
+}
+
+async function undoLastOffense() {
+  if (!state.undoData) {
+    return;
+  }
+
+  const data = state.undoData;
+  clearUndoTimer();
+  elements.undoButton.disabled = true;
+  setStatus('Undoing...');
+
+  try {
+    const response = await fetch('/api/undoSwear', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        userId: state.userId,
+        partitionKey: data.partitionKey,
+        id: data.id
+      })
+    });
+
+    const payload = await response.json();
+    if (!response.ok || !payload.success) {
+      throw new Error(payload.error?.message || 'Could not undo swear.');
+    }
+
+    await fetchTodayStats();
+    renderAll();
+    setStatus('Swear undone.');
+  } catch (error) {
+    setStatus(error.message, true);
+  } finally {
+    elements.undoButton.hidden = true;
+  }
+}
+
 function renderAll() {
   updateCounters();
   updatePenalty();
@@ -340,12 +408,13 @@ async function addOffense() {
     return;
   }
 
+  clearUndoTimer();
   state.adding = true;
   elements.addButton.disabled = true;
   setStatus('Logging...');
 
   try {
-    await logSwear();
+    const logData = await logSwear();
     await fetchTodayStats();
     updateCounters();
     showReaction();
@@ -353,6 +422,7 @@ async function addOffense() {
     updatePenalty();
     renderHistory();
     setStatus('Swear logged. Stay accountable.');
+    startUndoTimer(logData);
   } catch (error) {
     setStatus(error.message, true);
   } finally {
@@ -615,6 +685,7 @@ async function init() {
 
   elements.addButton.addEventListener('click', addOffense);
   elements.jarArea.addEventListener('click', addOffense);
+  elements.undoButton.addEventListener('click', undoLastOffense);
   elements.resetButton.addEventListener('click', resetJarView);
   elements.total.addEventListener('click', handleDonationAmountChange);
   elements.sessionCopyButton.addEventListener('click', copySessionCode);
