@@ -340,7 +340,7 @@ body {
 
 .undo-btn:hover {
   background: var(--danger);
-  color: #fff;
+  color: var(--btn-primary-text);
 }
 
 .undo-btn:disabled {
