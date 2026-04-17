@@ -15,6 +15,7 @@ Functions on the backend, deployed as an Azure Static Web App.
 ## Table of contents
 
 - [What the app does](#what-the-app-does)
+- [Screenshots](#screenshots)
 - [Tech stack](#tech-stack)
 - [Repo structure](#repo-structure)
 - [Environment variables](#environment-variables)
@@ -48,6 +49,27 @@ From the main screen the user can:
   session code.
 - **Switch jar** — load a different session code, useful for sharing a jar
   with a partner.
+
+---
+
+## Screenshots
+
+<table>
+  <tr>
+    <td align="center" width="33%">
+      <img src="https://github.com/user-attachments/assets/ec5682b0-c986-4acf-98f2-5769d28d3f75" alt="Onboarding dialog — generate or enter a session code" width="220" />
+      <br /><sub><b>Onboarding</b> — generate or enter a session code</sub>
+    </td>
+    <td align="center" width="33%">
+      <img src="https://github.com/user-attachments/assets/fa996f98-78dc-4e65-b4cf-0d1c54587d3c" alt="Main screen — empty jar, clean slate" width="220" />
+      <br /><sub><b>Empty jar</b> — clean slate on a fresh day</sub>
+    </td>
+    <td align="center" width="33%">
+      <img src="https://github.com/user-attachments/assets/1401438c-6508-410a-97f5-80fa41a20f5c" alt="Main screen — jar filling up after 5 offenses" width="220" />
+      <br /><sub><b>Filling up</b> — 5 offenses logged, coins visible in jar</sub>
+    </td>
+  </tr>
+</table>
 
 ---
 
