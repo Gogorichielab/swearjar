@@ -2,6 +2,11 @@ const crypto = require('node:crypto');
 const { getTableClient } = require('../lib/tableClient');
 const { normalizeTimestamp } = require('../lib/dateUtils');
 const { ok, fail } = require('../lib/http');
+const { validateUserId } = require('../lib/validation');
+
+// Reject timestamps that are implausibly far in the past or future.
+const MAX_FUTURE_MS = 60 * 60 * 1000;        // 1 hour ahead (clock-skew tolerance)
+const MAX_PAST_MS   = 30 * 24 * 60 * 60 * 1000; // 30 days behind
 
 function buildPartitionKey(userId, dayKey) {
   return `${userId}|${dayKey}`;
@@ -49,8 +54,9 @@ async function logSwearHandler(request, context) {
     const body = await parseBody(request);
     const userId = typeof body.userId === 'string' ? body.userId.trim() : '';
 
-    if (!userId) {
-      return fail(400, 'VALIDATION_ERROR', 'userId is required and must be a non-empty string.');
+    const userIdError = validateUserId(userId);
+    if (userIdError) {
+      return fail(400, 'VALIDATION_ERROR', userIdError);
     }
 
     let normalized;
@@ -58,6 +64,15 @@ async function logSwearHandler(request, context) {
       normalized = normalizeTimestamp(body.timestamp);
     } catch (validationErr) {
       return fail(400, 'VALIDATION_ERROR', validationErr.message, { field: 'timestamp' });
+    }
+
+    const now = Date.now();
+    const eventMs = normalized.eventDate.getTime();
+    if (eventMs > now + MAX_FUTURE_MS) {
+      return fail(400, 'VALIDATION_ERROR', 'Timestamp cannot be more than 1 hour in the future.', { field: 'timestamp' });
+    }
+    if (eventMs < now - MAX_PAST_MS) {
+      return fail(400, 'VALIDATION_ERROR', 'Timestamp cannot be more than 30 days in the past.', { field: 'timestamp' });
     }
 
     const partitionKey = buildPartitionKey(userId, normalized.dayKey);

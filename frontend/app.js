@@ -413,32 +413,107 @@ function showOnboarding(resolve) {
   overlay.setAttribute('aria-modal', 'true');
   overlay.setAttribute('aria-label', 'Set up your Swear Jar');
 
-  overlay.innerHTML = `
-    <div class="onboarding-card">
-      <div class="onboarding-jar-icon" aria-hidden="true">🫙</div>
-      <h1 class="onboarding-title">Swear Jar</h1>
-      <p class="onboarding-subtitle">Your personal accountability tracker</p>
-      <div class="onboarding-panels">
-        <div id="panel-create">
-          <p class="panel-heading">Start fresh</p>
-          <p class="panel-body">We've generated a unique code for your jar. Write it down — you can use it to access your jar from any device.</p>
-          <div class="code-preview" id="code-preview" aria-label="Your generated session code">${activeCode}</div>
-          <p class="code-warning">⚠️ Anyone with this code can see your jar.</p>
-          <button class="ob-btn ob-btn--primary" id="btn-create" type="button">Create jar with this code</button>
-          <button class="ob-btn ob-btn--ghost" id="btn-shuffle" type="button">↻ Get a different code</button>
-        </div>
-        <div class="onboarding-divider" aria-hidden="true">or</div>
-        <div id="panel-join">
-          <p class="panel-heading">Rejoin your jar</p>
-          <p class="panel-body">Already have a code? Enter it below to pick up where you left off.</p>
-          <input class="ob-input" id="join-input" type="text" autocapitalize="characters"
-            aria-label="Enter your existing session code" placeholder="WORD-WORD-1234" />
-          <div class="ob-error" id="join-error" role="alert" aria-live="polite"></div>
-          <button class="ob-btn ob-btn--secondary" id="btn-join" type="button">Open this jar</button>
-        </div>
-      </div>
-    </div>
-  `;
+  // ── "Start fresh" panel ──────────────────────────────────────────────────
+  const panelCreate = document.createElement('div');
+  panelCreate.id = 'panel-create';
+
+  const createHeading = document.createElement('p');
+  createHeading.className = 'panel-heading';
+  createHeading.textContent = 'Start fresh';
+
+  const createBody = document.createElement('p');
+  createBody.className = 'panel-body';
+  createBody.textContent =
+    "We've generated a unique code for your jar. Write it down — you can use it to access your jar from any device.";
+
+  const codePreview = document.createElement('div');
+  codePreview.className = 'code-preview';
+  codePreview.id = 'code-preview';
+  codePreview.setAttribute('aria-label', 'Your generated session code');
+  codePreview.textContent = activeCode; // textContent — never innerHTML
+
+  const codeWarning = document.createElement('p');
+  codeWarning.className = 'code-warning';
+  codeWarning.textContent = '⚠️ Anyone with this code can see your jar.';
+
+  const btnCreate = document.createElement('button');
+  btnCreate.className = 'ob-btn ob-btn--primary';
+  btnCreate.id = 'btn-create';
+  btnCreate.type = 'button';
+  btnCreate.textContent = 'Create jar with this code';
+
+  const btnShuffle = document.createElement('button');
+  btnShuffle.className = 'ob-btn ob-btn--ghost';
+  btnShuffle.id = 'btn-shuffle';
+  btnShuffle.type = 'button';
+  btnShuffle.textContent = '↻ Get a different code';
+
+  panelCreate.append(createHeading, createBody, codePreview, codeWarning, btnCreate, btnShuffle);
+
+  // ── Divider ──────────────────────────────────────────────────────────────
+  const divider = document.createElement('div');
+  divider.className = 'onboarding-divider';
+  divider.setAttribute('aria-hidden', 'true');
+  divider.textContent = 'or';
+
+  // ── "Rejoin your jar" panel ──────────────────────────────────────────────
+  const panelJoin = document.createElement('div');
+  panelJoin.id = 'panel-join';
+
+  const joinHeading = document.createElement('p');
+  joinHeading.className = 'panel-heading';
+  joinHeading.textContent = 'Rejoin your jar';
+
+  const joinBody = document.createElement('p');
+  joinBody.className = 'panel-body';
+  joinBody.textContent =
+    'Already have a code? Enter it below to pick up where you left off.';
+
+  const joinInput = document.createElement('input');
+  joinInput.className = 'ob-input';
+  joinInput.id = 'join-input';
+  joinInput.type = 'text';
+  joinInput.setAttribute('autocapitalize', 'characters');
+  joinInput.setAttribute('aria-label', 'Enter your existing session code');
+  joinInput.placeholder = 'WORD-WORD-1234';
+
+  const joinError = document.createElement('div');
+  joinError.className = 'ob-error';
+  joinError.id = 'join-error';
+  joinError.setAttribute('role', 'alert');
+  joinError.setAttribute('aria-live', 'polite');
+
+  const btnJoin = document.createElement('button');
+  btnJoin.className = 'ob-btn ob-btn--secondary';
+  btnJoin.id = 'btn-join';
+  btnJoin.type = 'button';
+  btnJoin.textContent = 'Open this jar';
+
+  panelJoin.append(joinHeading, joinBody, joinInput, joinError, btnJoin);
+
+  // ── Assemble ─────────────────────────────────────────────────────────────
+  const panels = document.createElement('div');
+  panels.className = 'onboarding-panels';
+  panels.append(panelCreate, divider, panelJoin);
+
+  const card = document.createElement('div');
+  card.className = 'onboarding-card';
+
+  const jarIcon = document.createElement('div');
+  jarIcon.className = 'onboarding-jar-icon';
+  jarIcon.setAttribute('aria-hidden', 'true');
+  jarIcon.textContent = '🫙';
+
+  const title = document.createElement('h1');
+  title.className = 'onboarding-title';
+  title.textContent = 'Swear Jar';
+
+  const subtitle = document.createElement('p');
+  subtitle.className = 'onboarding-subtitle';
+  subtitle.textContent = 'Your personal accountability tracker';
+
+  card.append(jarIcon, title, subtitle, panels);
+  overlay.appendChild(card);
 
   document.body.appendChild(overlay);
 
@@ -450,23 +525,19 @@ function showOnboarding(resolve) {
     if (e.key === 'Escape') e.stopPropagation();
   });
 
-  overlay.querySelector('#btn-shuffle').addEventListener('click', () => {
+  btnShuffle.addEventListener('click', () => {
     activeCode = generateCode();
-    const preview = overlay.querySelector('#code-preview');
-    preview.classList.remove('shuffle-flash');
-    void preview.offsetWidth;
-    preview.classList.add('shuffle-flash');
-    preview.textContent = activeCode;
-    window.setTimeout(() => { preview.classList.remove('shuffle-flash'); }, 200);
+    codePreview.classList.remove('shuffle-flash');
+    void codePreview.offsetWidth;
+    codePreview.classList.add('shuffle-flash');
+    codePreview.textContent = activeCode; // textContent — never innerHTML
+    window.setTimeout(() => { codePreview.classList.remove('shuffle-flash'); }, 200);
   });
 
-  overlay.querySelector('#btn-create').addEventListener('click', () => {
+  btnCreate.addEventListener('click', () => {
     saveSessionId(activeCode);
     closeOnboarding(overlay, () => resolve(activeCode));
   });
-
-  const joinInput = overlay.querySelector('#join-input');
-  const joinError = overlay.querySelector('#join-error');
 
   joinInput.addEventListener('input', () => {
     joinInput.value = joinInput.value.toUpperCase().replace(/[^A-Z0-9-]/g, '');
@@ -474,10 +545,10 @@ function showOnboarding(resolve) {
   });
 
   joinInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') overlay.querySelector('#btn-join').click();
+    if (e.key === 'Enter') btnJoin.click();
   });
 
-  overlay.querySelector('#btn-join').addEventListener('click', () => {
+  btnJoin.addEventListener('click', () => {
     const code = normalizeCode(joinInput.value);
     if (!isValidCode(code)) {
       joinError.textContent = 'Please enter a valid code in the format WORD-WORD-1234.';

@@ -108,10 +108,16 @@ function renderCalendar(date = new Date()) {
       cell.classList.add("is-not-clean");
     }
 
-    cell.innerHTML = `
-      <span class="calendar-day__date">${day}</span>
-      <span class="calendar-day__count">${count}</span>
-    `;
+    const dateSpan = document.createElement("span");
+    dateSpan.className = "calendar-day__date";
+    dateSpan.textContent = String(day);
+
+    const countSpan = document.createElement("span");
+    countSpan.className = "calendar-day__count";
+    countSpan.textContent = String(count);
+
+    cell.appendChild(dateSpan);
+    cell.appendChild(countSpan);
 
     calendarEl.appendChild(cell);
   }

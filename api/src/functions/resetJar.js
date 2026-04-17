@@ -1,5 +1,6 @@
 const { getTableClient } = require('../lib/tableClient');
 const { ok, fail } = require('../lib/http');
+const { validateUserId } = require('../lib/validation');
 
 function escapeOdata(value) {
   return String(value).replace(/'/g, "''");
@@ -15,8 +16,9 @@ async function resetJarHandler(request, context) {
       userId = '';
     }
 
-    if (!userId) {
-      return fail(400, 'VALIDATION_ERROR', 'userId is required and must be a non-empty string.');
+    const userIdError = validateUserId(userId);
+    if (userIdError) {
+      return fail(400, 'VALIDATION_ERROR', userIdError);
     }
 
     const userEscaped = escapeOdata(userId);

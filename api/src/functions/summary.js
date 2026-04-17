@@ -1,24 +1,28 @@
 const { getTableClient } = require('../lib/tableClient');
 const { todayKey } = require('../lib/dateUtils');
 const { ok, fail } = require('../lib/http');
+const { validateUserId } = require('../lib/validation');
 
 function escapeOdata(value) {
   return String(value).replace(/'/g, "''");
 }
 
-function parsePositiveInt(value, fallback) {
+function parsePositiveInt(value, fallback, max) {
   const n = Number.parseInt(value, 10);
-  return Number.isNaN(n) || n < 1 ? fallback : n;
+  if (Number.isNaN(n) || n < 1) return fallback;
+  return max !== undefined ? Math.min(n, max) : n;
 }
 
 async function summaryHandler(request, context) {
   try {
     const userId = (request.query.get('userId') || '').trim();
-    if (!userId) {
-      return fail(400, 'VALIDATION_ERROR', 'Query parameter userId is required.');
+    const userIdError = validateUserId(userId);
+    if (userIdError) {
+      return fail(400, 'VALIDATION_ERROR', userIdError);
     }
 
-    const lookbackDays = parsePositiveInt(request.query.get('lookbackDays'), 180);
+    // Cap lookbackDays to 365 to keep response sizes bounded.
+    const lookbackDays = parsePositiveInt(request.query.get('lookbackDays'), 180, 365);
     const userEscaped = escapeOdata(userId);
     const startPartition = `${userEscaped}|0000-00-00`;
     const endPartition = `${userEscaped}|~~~~-~~-~~`;

@@ -1,0 +1,18 @@
+# Local Azure Functions settings — contains connection strings and secrets; NEVER commit.
+api/local.settings.json
+
+# Node.js dependencies
+node_modules/
+api/node_modules/
+
+# Azure Functions build/debug artefacts
+api/.azurefunctions/
+api/bin/
+api/obj/
+
+# OS and editor artefacts
+.DS_Store
+Thumbs.db
+.env
+*.env.local
+.vscode/settings.json

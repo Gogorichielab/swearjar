@@ -7,21 +7,21 @@ const { todayStatsHandler } = require('./functions/todayStats');
 app.http('logSwear', {
   route: 'logSwear',
   methods: ['POST'],
-  authLevel: 'anonymous',
+  authLevel: 'function',
   handler: logSwearHandler
 });
 
 app.http('todayStats', {
   route: 'todayStats',
   methods: ['GET'],
-  authLevel: 'anonymous',
+  authLevel: 'function',
   handler: todayStatsHandler
 });
 
 app.http('resetJar', {
   route: 'resetJar',
   methods: ['POST'],
-  authLevel: 'anonymous',
+  authLevel: 'function',
   handler: resetJarHandler
 });
 
@@ -29,6 +29,6 @@ app.http('resetJar', {
 app.http('summary', {
   route: 'summary',
   methods: ['GET'],
-  authLevel: 'anonymous',
+  authLevel: 'function',
   handler: summaryHandler
 });

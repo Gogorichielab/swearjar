@@ -1,6 +1,7 @@
 const { getTableClient } = require('../lib/tableClient');
 const { todayKey, formatDatePart } = require('../lib/dateUtils');
 const { ok, fail } = require('../lib/http');
+const { validateUserId } = require('../lib/validation');
 
 function escapeOdata(value) {
   return String(value).replace(/'/g, "''");
@@ -19,8 +20,9 @@ function getLastSevenDayKeys() {
 async function todayStatsHandler(request, context) {
   try {
     const userId = (request.query.get('userId') || '').trim();
-    if (!userId) {
-      return fail(400, 'VALIDATION_ERROR', 'Query parameter userId is required.');
+    const userIdError = validateUserId(userId);
+    if (userIdError) {
+      return fail(400, 'VALIDATION_ERROR', userIdError);
     }
 
     const userEscaped = escapeOdata(userId);
