@@ -40,6 +40,4 @@ export function saveSessionId(id) {
   localStorage.setItem(STORAGE_KEY, id);
 }
 
-export function clearSessionId() {
-  localStorage.removeItem(STORAGE_KEY);
-}
+

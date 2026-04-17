@@ -1,10 +1,7 @@
 const { getTableClient } = require('../lib/tableClient');
 const { todayKey, formatDatePart } = require('../lib/dateUtils');
 const { ok, fail } = require('../lib/http');
-
-function escapeOdata(value) {
-  return String(value).replace(/'/g, "''");
-}
+const { escapeOdata } = require('../lib/odata');
 
 function getLastSevenDayKeys() {
   const days = [];

@@ -1,9 +1,6 @@
 const { getTableClient } = require('../lib/tableClient');
 const { ok, fail } = require('../lib/http');
-
-function escapeOdata(value) {
-  return String(value).replace(/'/g, "''");
-}
+const { escapeOdata } = require('../lib/odata');
 
 async function resetJarHandler(request, context) {
   try {
