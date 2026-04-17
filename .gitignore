@@ -5,7 +5,7 @@ api/local.settings.json
 node_modules/
 api/node_modules/
 
-# Azure Functions build/debug artefacts
+# Azure Functions build/debug artifacts
 api/.azurefunctions/
 api/bin/
 api/obj/

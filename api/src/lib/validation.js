@@ -13,6 +13,11 @@
 
 const USER_ID_PATTERN = /^[A-Z]{2,8}-[A-Z]{2,8}-\d{4}$/;
 
+// Maximum length of a valid userId: 8 (WORD) + 1 (-) + 8 (WORD) + 1 (-) + 4 (NNNN) = 22 chars.
+// The pre-check below bounds input length before the regex runs, preventing any
+// theoretical ReDoS risk from very long strings.
+const USER_ID_MAX_LENGTH = 22;
+
 /**
  * Returns null when userId is valid, or a human-readable error string when it
  * is not.  Callers should pass the error message to fail(400, …) unchanged.
@@ -29,6 +34,10 @@ function validateUserId(userId) {
 
   if (!trimmed) {
     return 'userId is required and must be a non-empty string.';
+  }
+
+  if (trimmed.length > USER_ID_MAX_LENGTH) {
+    return `userId must match the format WORD-WORD-NNNN (e.g., BOLD-JAR-1234).`;
   }
 
   if (!USER_ID_PATTERN.test(trimmed)) {
