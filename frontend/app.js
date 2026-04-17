@@ -335,13 +335,35 @@ async function addOffense() {
   }
 }
 
-function resetJarView() {
-  state.todayCount = 0;
-  state.weekCount = 0;
-  state.recentEvents = [];
-  state.trend = [];
-  renderAll();
-  setStatus('Jar visuals reset locally. Server data is unchanged.');
+async function resetJarView() {
+  if (!window.confirm('Clear your entire swear jar? This cannot be undone.')) {
+    return;
+  }
+
+  setStatus('Clearing jar...');
+  try {
+    const response = await fetch('/api/resetJar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: state.userId })
+    });
+
+    const payload = await response.json();
+    if (!response.ok || !payload.success) {
+      throw new Error(payload.error?.message || 'Could not reset jar.');
+    }
+
+    state.todayCount = 0;
+    state.weekCount = 0;
+    state.recentEvents = [];
+    state.trend = [];
+    state.recordCount = 0;
+    saveLocalRecord(0);
+    renderAll();
+    setStatus('Jar cleared.');
+  } catch (error) {
+    setStatus(error.message, true);
+  }
 }
 
 function handleFineAmountChange() {
