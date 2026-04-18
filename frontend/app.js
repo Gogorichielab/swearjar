@@ -511,11 +511,21 @@ function closeSettingsMenu() {
   if (m.hidden || !m.classList.contains('show')) return;
   m.classList.remove('show');
   elements.settingsButton.setAttribute('aria-expanded', 'false');
-  const onEnd = (e) => {
-    if (e.target !== m || e.propertyName !== 'grid-template-rows') return;
+
+  let finished = false;
+  const finish = () => {
+    if (finished) return;
+    finished = true;
     m.removeEventListener('transitionend', onEnd);
+    window.clearTimeout(fallback);
     if (!m.classList.contains('show')) m.hidden = true;
   };
+  const onEnd = (e) => {
+    if (e.target !== m || e.propertyName !== 'grid-template-rows') return;
+    finish();
+  };
+  // Fallback covers prefers-reduced-motion (no transitionend) and backgrounded tabs.
+  const fallback = window.setTimeout(finish, 400);
   m.addEventListener('transitionend', onEnd);
 }
 
