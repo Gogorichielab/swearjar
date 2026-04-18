@@ -6,7 +6,9 @@
   "main": "src/index.js",
   "scripts": {
     "start": "func start",
-    "lint": "node --check src/index.js"
+    "lint": "node --check src/index.js",
+    "test": "jest --testPathPatterns=src/",
+    "test:coverage": "jest --testPathPatterns=src/ --coverage"
   },
   "engines": {
     "node": ">=20"
@@ -14,5 +16,8 @@
   "dependencies": {
     "@azure/data-tables": "^13.3.0",
     "@azure/functions": "^4.5.0"
+  },
+  "devDependencies": {
+    "jest": "^30.3.0"
   }
 }
