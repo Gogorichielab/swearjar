@@ -5,6 +5,9 @@ npm-debug.log*
 # Azure Functions local config (contains secrets)
 api/local.settings.json
 
+# Test coverage reports
+api/coverage/
+
 # OS files
 .DS_Store
 Thumbs.db
