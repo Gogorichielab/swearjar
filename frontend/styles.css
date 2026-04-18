@@ -324,6 +324,30 @@ body {
   cursor: wait;
 }
 
+.undo-btn {
+  width: 100%;
+  margin-top: 8px;
+  border: 1.5px solid var(--danger);
+  background: transparent;
+  color: var(--danger);
+  border-radius: 14px;
+  padding: 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.undo-btn:hover {
+  background: var(--danger);
+  color: var(--btn-primary-text);
+}
+
+.undo-btn:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
 .reset-btn {
   margin-top: 8px;
   background: transparent;

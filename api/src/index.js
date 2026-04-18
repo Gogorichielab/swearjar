@@ -1,5 +1,6 @@
 const { app } = require('@azure/functions');
 const { logSwearHandler } = require('./functions/logSwear');
+const { undoSwearHandler } = require('./functions/undoSwear');
 const { resetJarHandler } = require('./functions/resetJar');
 const { summaryHandler } = require('./functions/summary');
 const { todayStatsHandler } = require('./functions/todayStats');
@@ -9,6 +10,13 @@ app.http('logSwear', {
   methods: ['POST'],
   authLevel: 'anonymous',
   handler: logSwearHandler
+});
+
+app.http('undoSwear', {
+  route: 'undoSwear',
+  methods: ['POST'],
+  authLevel: 'anonymous',
+  handler: undoSwearHandler
 });
 
 app.http('todayStats', {
