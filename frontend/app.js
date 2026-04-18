@@ -496,23 +496,35 @@ function copySessionCode() {
 }
 
 function openSettingsMenu() {
-  elements.settingsMenu.hidden = false;
-  elements.settingsMenu.classList.add('show');
-  elements.settingsButton.setAttribute('aria-expanded', 'true');
+  const m = elements.settingsMenu;
+  m.hidden = false;
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      m.classList.add('show');
+      elements.settingsButton.setAttribute('aria-expanded', 'true');
+    });
+  });
 }
 
 function closeSettingsMenu() {
-  elements.settingsMenu.classList.remove('show');
-  elements.settingsMenu.hidden = true;
+  const m = elements.settingsMenu;
+  if (m.hidden || !m.classList.contains('show')) return;
+  m.classList.remove('show');
   elements.settingsButton.setAttribute('aria-expanded', 'false');
+  const onEnd = (e) => {
+    if (e.target !== m || e.propertyName !== 'grid-template-rows') return;
+    m.removeEventListener('transitionend', onEnd);
+    if (!m.classList.contains('show')) m.hidden = true;
+  };
+  m.addEventListener('transitionend', onEnd);
 }
 
 function toggleSettingsMenu() {
-  if (elements.settingsMenu.hidden) {
-    openSettingsMenu();
+  if (elements.settingsMenu.classList.contains('show')) {
+    closeSettingsMenu();
     return;
   }
-  closeSettingsMenu();
+  openSettingsMenu();
 }
 
 function closeOnboarding(overlay, callback) {
