@@ -10,6 +10,10 @@ updates:
       interval: "monthly"
       day: 16
     open-pull-requests-limit: 10
+    groups:
+      npm-dependencies:
+        patterns:
+          - "*"
 
   # Keep GitHub Actions versions up to date
   - package-ecosystem: "github-actions"
@@ -18,3 +22,7 @@ updates:
       interval: "monthly"
       day: 16
     open-pull-requests-limit: 10
+    groups:
+      github-actions:
+        patterns:
+          - "*"
