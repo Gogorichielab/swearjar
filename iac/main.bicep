@@ -565,7 +565,7 @@ resource sites_swearjar_name_web 'Microsoft.Web/sites/config@2024-11-01' = {
       }
     ]
     scmIpSecurityRestrictionsUseMain: false
-    http20Enabled: false
+    http20Enabled: true
     minTlsVersion: '1.2'
     scmMinTlsVersion: '1.2'
     ftpsState: 'FtpsOnly'
@@ -691,7 +691,7 @@ resource sites_swearjar_name_resource 'Microsoft.Web/sites@2024-11-01' = {
       numberOfWorkers: 1
       acrUseManagedIdentityCreds: false
       alwaysOn: false
-      http20Enabled: false
+      http20Enabled: true
       functionAppScaleLimit: 100
       minimumElasticInstanceCount: 0
     }
