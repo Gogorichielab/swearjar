@@ -50,24 +50,41 @@ All parameters have defaults matching the live deployment. Override them when de
 | `serverfarms_ASP_swearjar_9827_name` | `ASP-swearjar-9827` | App Service Plan name |
 | `storageAccounts_swearjar9003_name` | `swearjar9003` | Storage Account name (must be globally unique) |
 | `smartdetectoralertrules_failure_anomalies_swearjar_name` | `failure anomalies - swearjar` | Smart detector alert rule name |
-| `actiongroups_application_insights_smart_detection_externalid` | _(full resource ID)_ | Resource ID of the action group for alert notifications |
-| `workspaces_DefaultWorkspace_..._externalid` | _(full resource ID)_ | Resource ID of the Log Analytics workspace |
+| `actiongroups_application_insights_smart_detection_externalid` | _(required, no default)_ | Full Azure resource ID of the action group for alert notifications. Supply via `main.bicepparam`; never commit. |
+| `logAnalyticsWorkspaceId` | _(required, no default)_ | Full Azure resource ID of the Log Analytics workspace. Supply via `main.bicepparam`; never commit. |
+| `customDomainVerificationId` | `''` (optional) | Domain verification token. Leave empty to let Azure generate a fresh value. |
+
+> **Why no defaults for the resource IDs?**
+> Those values embed the Azure **subscription ID** and **resource group name**.
+> Hardcoding them in source enables targeted reconnaissance of the tenant and
+> leaks naming conventions for other resources. They are now required deploy-time
+> inputs sourced from a gitignored `main.bicepparam` file.
 
 ---
 
 ## Deploy
 
-```bash
-az deployment group create \
-  --resource-group <your-resource-group> \
-  --template-file main.bicep \
-  --parameters \
-      sites_swearjar_name=swearjar \
-      staticSites_swearjar_name=swearjar \
-      storageAccounts_swearjar9003_name=swearjar9003
-```
+1. Copy the sample parameter file and fill in the values for your subscription:
 
-Pass `--parameters @params.json` for a full parameter override file.
+   ```bash
+   cp iac/main.bicepparam.sample iac/main.bicepparam
+   # edit iac/main.bicepparam — replace <SUBSCRIPTION_ID>, <RESOURCE_GROUP>, etc.
+   ```
+
+   `iac/main.bicepparam` is gitignored — keep it that way.
+
+2. Deploy with the parameter file:
+
+   ```bash
+   az deployment group create \
+     --resource-group <your-resource-group> \
+     --template-file iac/main.bicep \
+     --parameters iac/main.bicepparam
+   ```
+
+   You can also pass parameters individually with repeated `--parameters key=value`
+   flags, but the parameter file keeps sensitive resource IDs out of your shell
+   history.
 
 ---
 

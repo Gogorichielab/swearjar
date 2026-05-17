@@ -5,6 +5,10 @@ npm-debug.log*
 # Azure Functions local config (contains secrets)
 api/local.settings.json
 
+# Bicep parameter files (contain subscription / resource IDs)
+iac/*.bicepparam
+!iac/*.bicepparam.sample
+
 # Playwright artifacts
 tests/e2e/test-results/
 tests/e2e/playwright-report/
