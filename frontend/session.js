@@ -17,10 +17,25 @@ const NOUNS = [
 
 const STORAGE_KEY = 'swearjar:userId';
 
+// Uniformly distributed integer in [0, max) using a CSPRNG. Rejection
+// sampling avoids the modulo bias that Math.random() + modulo would
+// introduce — important because the wordlists are small and any bias
+// would shrink the effective keyspace.
+function secureRandomInt(max) {
+  const limit = Math.floor(0x100000000 / max) * max;
+  const buf = new Uint32Array(1);
+  let value;
+  do {
+    crypto.getRandomValues(buf);
+    value = buf[0];
+  } while (value >= limit);
+  return value % max;
+}
+
 export function generateCode() {
-  const adj = ADJECTIVES[Math.floor(Math.random() * ADJECTIVES.length)];
-  const noun = NOUNS[Math.floor(Math.random() * NOUNS.length)];
-  const num = String(Math.floor(Math.random() * 9000) + 1000);
+  const adj = ADJECTIVES[secureRandomInt(ADJECTIVES.length)];
+  const noun = NOUNS[secureRandomInt(NOUNS.length)];
+  const num = String(secureRandomInt(9000) + 1000);
   return `${adj}-${noun}-${num}`;
 }
 
