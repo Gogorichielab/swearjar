@@ -27,7 +27,9 @@ const state = {
   adding: false,
   undoTimer: null,
   undoData: null,
-  undoCountdown: 0
+  undoCountdown: 0,
+  codeRevealed: false,
+  revealTimer: null
 };
 
 const elements = {
@@ -54,6 +56,7 @@ const elements = {
   statusMessage: document.getElementById('status-message'),
   goalProgress: document.getElementById('goal-progress'),
   sessionCodeDisplay: document.getElementById('session-code-display'),
+  sessionRevealButton: document.getElementById('session-reveal-btn'),
   sessionCopyButton: document.getElementById('session-copy-btn'),
   settingsButton: document.getElementById('settings-btn'),
   settingsMenu: document.getElementById('settings-menu'),
@@ -481,8 +484,34 @@ function handleDonationAmountChange() {
   setStatus(`Fine amount updated to ${currency(value)}.`);
 }
 
+function maskCode(code) {
+  const parts = code.split('-');
+  if (parts.length === 3) {
+    return `${parts[0]}-${parts[1]}-${'•'.repeat(parts[2].length)}`;
+  }
+  return '•'.repeat(code.length);
+}
+
 function renderSessionCode() {
-  elements.sessionCodeDisplay.textContent = state.userId;
+  elements.sessionCodeDisplay.textContent = state.codeRevealed ? state.userId : maskCode(state.userId);
+  elements.sessionRevealButton.textContent = state.codeRevealed ? 'Hide' : 'Show';
+  elements.sessionRevealButton.setAttribute('aria-label', state.codeRevealed ? 'Hide session code' : 'Show session code');
+}
+
+function toggleCodeReveal() {
+  if (state.revealTimer) {
+    window.clearTimeout(state.revealTimer);
+    state.revealTimer = null;
+  }
+  state.codeRevealed = !state.codeRevealed;
+  renderSessionCode();
+  if (state.codeRevealed) {
+    state.revealTimer = window.setTimeout(() => {
+      state.codeRevealed = false;
+      state.revealTimer = null;
+      renderSessionCode();
+    }, 5000);
+  }
 }
 
 function copySessionCode() {
@@ -491,7 +520,7 @@ function copySessionCode() {
     elements.sessionCopyButton.textContent = 'Copied!';
     window.setTimeout(() => { elements.sessionCopyButton.textContent = original; }, 1800);
   }).catch(() => {
-    setStatus(`Your code: ${state.userId}`);
+    setStatus('Could not copy — use the Show button to view your code.');
   });
 }
 
@@ -710,6 +739,7 @@ async function init() {
   elements.undoButton.addEventListener('click', undoLastOffense);
   elements.resetButton.addEventListener('click', resetJarView);
   elements.total.addEventListener('click', handleDonationAmountChange);
+  elements.sessionRevealButton.addEventListener('click', toggleCodeReveal);
   elements.sessionCopyButton.addEventListener('click', copySessionCode);
   elements.settingsButton.addEventListener('click', toggleSettingsMenu);
   elements.menuChangeCode.addEventListener('click', () => {

@@ -489,6 +489,7 @@ body {
   flex: 1;
 }
 
+.session-strip__reveal,
 .session-strip__copy {
   background: transparent;
   border: 1px solid var(--accent-border);
@@ -502,6 +503,7 @@ body {
   white-space: nowrap;
 }
 
+.session-strip__reveal:hover,
 .session-strip__copy:hover {
   background: var(--btn-primary);
   color: var(--btn-primary-text);
