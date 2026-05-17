@@ -422,7 +422,8 @@ resource storageAccounts_swearjar9003_name_default 'Microsoft.Storage/storageAcc
     }
     deleteRetentionPolicy: {
       allowPermanentDelete: false
-      enabled: false
+      enabled: true
+      days: 7
     }
   }
 }
@@ -512,12 +513,12 @@ resource sites_swearjar_name_web 'Microsoft.Web/sites/config@2024-11-01' = {
       'index.php'
     ]
     netFrameworkVersion: 'v4.0'
-    requestTracingEnabled: false
+    requestTracingEnabled: true
     remoteDebuggingEnabled: false
-    httpLoggingEnabled: false
+    httpLoggingEnabled: true
     acrUseManagedIdentityCreds: false
     logsDirectorySizeLimit: 35
-    detailedErrorLoggingEnabled: false
+    detailedErrorLoggingEnabled: true
     publishingUsername: 'REDACTED'
     scmType: 'None'
     use32BitWorkerProcess: false
