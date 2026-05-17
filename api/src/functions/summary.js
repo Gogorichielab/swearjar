@@ -2,6 +2,7 @@ const { getTableClient } = require('../lib/tableClient');
 const { todayKey } = require('../lib/dateUtils');
 const { ok, fail } = require('../lib/http');
 const { escapeOdata } = require('../lib/odata');
+const { resolveUserId } = require('../lib/auth');
 
 function parsePositiveInt(value, fallback) {
   const n = Number.parseInt(value, 10);
@@ -10,10 +11,15 @@ function parsePositiveInt(value, fallback) {
 
 async function summaryHandler(request, context) {
   try {
-    const userId = (request.query.get('userId') || '').trim();
-    if (!userId) {
+    const queryUserId = (request.query.get('userId') || '').trim();
+    const auth = resolveUserId(request, queryUserId);
+    if (!auth.userId) {
+      if (auth.error === 'AUTH_REQUIRED') {
+        return fail(401, 'UNAUTHORIZED', 'Authentication is required.');
+      }
       return fail(400, 'VALIDATION_ERROR', 'Query parameter userId is required.');
     }
+    const userId = auth.userId;
 
     const lookbackDays = parsePositiveInt(request.query.get('lookbackDays'), 180);
     const userEscaped = escapeOdata(userId);

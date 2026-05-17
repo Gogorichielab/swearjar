@@ -1,0 +1,31 @@
+// Sample parameter file for main.bicep.
+//
+// Copy this file to `main.bicepparam` (which is gitignored), fill in the
+// values for your subscription, and deploy with:
+//
+//   az deployment group create \
+//     --resource-group <your-resource-group> \
+//     --template-file iac/main.bicep \
+//     --parameters iac/main.bicepparam
+//
+// DO NOT commit the populated `main.bicepparam` file — it contains the
+// subscription ID and other tenant-identifying resource IDs.
+
+using './main.bicep'
+
+// Names of the resources to deploy (leave defaults unless you know better).
+param sites_swearjar_name = 'swearjar'
+param staticSites_swearjar_name = 'swearjar'
+param components_swearjar_name = 'swearjar'
+param serverfarms_ASP_swearjar_9827_name = 'ASP-swearjar-9827'
+param storageAccounts_swearjar9003_name = 'swearjar9003'
+param smartdetectoralertrules_failure_anomalies_swearjar_name = 'failure anomalies - swearjar'
+
+// Full Azure resource IDs of pre-existing resources this template references.
+// Format: /subscriptions/<sub-id>/resourceGroups/<rg>/providers/<type>/<name>
+param actiongroups_application_insights_smart_detection_externalid = '/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/<RESOURCE_GROUP>/providers/microsoft.insights/actiongroups/<ACTION_GROUP_NAME>'
+param logAnalyticsWorkspaceId = '/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/<RESOURCE_GROUP>/providers/Microsoft.OperationalInsights/workspaces/<WORKSPACE_NAME>'
+
+// Optional: only set when reproducing the existing deployment exactly.
+// Leave as '' to let Azure generate a fresh verification token.
+param customDomainVerificationId = ''

@@ -4,8 +4,15 @@ param components_swearjar_name string = 'swearjar'
 param serverfarms_ASP_swearjar_9827_name string = 'ASP-swearjar-9827'
 param storageAccounts_swearjar9003_name string = 'swearjar9003'
 param smartdetectoralertrules_failure_anomalies_swearjar_name string = 'failure anomalies - swearjar'
-param actiongroups_application_insights_smart_detection_externalid string = '/subscriptions/d80269be-1f38-4edf-b636-4a267c61e08b/resourceGroups/gogorichiedotcom/providers/microsoft.insights/actiongroups/application insights smart detection'
-param workspaces_DefaultWorkspace_d80269be_1f38_4edf_b636_4a267c61e08b_EUS2_externalid string = '/subscriptions/d80269be-1f38-4edf-b636-4a267c61e08b/resourceGroups/DefaultResourceGroup-EUS2/providers/Microsoft.OperationalInsights/workspaces/DefaultWorkspace-d80269be-1f38-4edf-b636-4a267c61e08b-EUS2'
+
+@description('Resource ID of the Application Insights action group that receives smart-detection alert notifications. Supply via a .bicepparam file or --parameters; never commit the value.')
+param actiongroups_application_insights_smart_detection_externalid string
+
+@description('Resource ID of the Log Analytics workspace the Application Insights component ingests into. Supply via a .bicepparam file or --parameters; never commit the value.')
+param logAnalyticsWorkspaceId string
+
+@description('Optional Static Web App / Function App custom domain verification ID. Leave empty unless reproducing the exact existing deployment. Supply via a .bicepparam file; never commit the value.')
+param customDomainVerificationId string = ''
 
 resource components_swearjar_name_resource 'microsoft.insights/components@2020-02-02' = {
   name: components_swearjar_name
@@ -16,7 +23,7 @@ resource components_swearjar_name_resource 'microsoft.insights/components@2020-0
     Flow_Type: 'Redfield'
     Request_Source: 'IbizaWebAppExtensionCreate'
     RetentionInDays: 90
-    WorkspaceResourceId: workspaces_DefaultWorkspace_d80269be_1f38_4edf_b636_4a267c61e08b_EUS2_externalid
+    WorkspaceResourceId: logAnalyticsWorkspaceId
     IngestionMode: 'LogAnalytics'
     publicNetworkAccessForIngestion: 'Enabled'
     publicNetworkAccessForQuery: 'Enabled'
@@ -466,7 +473,7 @@ resource sites_swearjar_name_ftp 'Microsoft.Web/sites/basicPublishingCredentials
   name: 'ftp'
   location: 'East US 2'
   tags: {
-    'hidden-link: /app-insights-resource-id': '/subscriptions/d80269be-1f38-4edf-b636-4a267c61e08b/resourceGroups/swearjar/providers/Microsoft.Insights/components/swearjar'
+    'hidden-link: /app-insights-resource-id': components_swearjar_name_resource.id
   }
   properties: {
     allow: false
@@ -478,7 +485,7 @@ resource sites_swearjar_name_scm 'Microsoft.Web/sites/basicPublishingCredentials
   name: 'scm'
   location: 'East US 2'
   tags: {
-    'hidden-link: /app-insights-resource-id': '/subscriptions/d80269be-1f38-4edf-b636-4a267c61e08b/resourceGroups/swearjar/providers/Microsoft.Insights/components/swearjar'
+    'hidden-link: /app-insights-resource-id': components_swearjar_name_resource.id
   }
   properties: {
     allow: false
@@ -490,7 +497,7 @@ resource sites_swearjar_name_web 'Microsoft.Web/sites/config@2024-11-01' = {
   name: 'web'
   location: 'East US 2'
   tags: {
-    'hidden-link: /app-insights-resource-id': '/subscriptions/d80269be-1f38-4edf-b636-4a267c61e08b/resourceGroups/swearjar/providers/Microsoft.Insights/components/swearjar'
+    'hidden-link: /app-insights-resource-id': components_swearjar_name_resource.id
   }
   properties: {
     numberOfWorkers: 1
@@ -651,7 +658,7 @@ resource sites_swearjar_name_resource 'Microsoft.Web/sites@2024-11-01' = {
   name: sites_swearjar_name
   location: 'East US 2'
   tags: {
-    'hidden-link: /app-insights-resource-id': '/subscriptions/d80269be-1f38-4edf-b636-4a267c61e08b/resourceGroups/swearjar/providers/Microsoft.Insights/components/swearjar'
+    'hidden-link: /app-insights-resource-id': components_swearjar_name_resource.id
   }
   kind: 'functionapp,linux'
   properties: {
@@ -715,7 +722,7 @@ resource sites_swearjar_name_resource 'Microsoft.Web/sites@2024-11-01' = {
     clientCertMode: 'Required'
     hostNamesDisabled: false
     ipMode: 'IPv4'
-    customDomainVerificationId: 'CDAC03D3538D0923A8F1BD1774FA3A7E14B5AA7D4D34C581E15C70A3A164E251'
+    customDomainVerificationId: customDomainVerificationId
     containerSize: 1536
     dailyMemoryTimeQuota: 0
     httpsOnly: true

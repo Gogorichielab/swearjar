@@ -1,5 +1,6 @@
 const { getTableClient } = require('../lib/tableClient');
 const { ok, fail } = require('../lib/http');
+const { resolveUserId } = require('../lib/auth');
 
 async function undoSwearHandler(request, context) {
   try {
@@ -10,10 +11,14 @@ async function undoSwearHandler(request, context) {
       return fail(400, 'VALIDATION_ERROR', 'Request body must be valid JSON.', { field: 'body' });
     }
 
-    const userId = typeof body.userId === 'string' ? body.userId.trim() : '';
-    if (!userId) {
+    const auth = resolveUserId(request, body.userId);
+    if (!auth.userId) {
+      if (auth.error === 'AUTH_REQUIRED') {
+        return fail(401, 'UNAUTHORIZED', 'Authentication is required.');
+      }
       return fail(400, 'VALIDATION_ERROR', 'userId is required and must be a non-empty string.');
     }
+    const userId = auth.userId;
 
     const partitionKey = typeof body.partitionKey === 'string' ? body.partitionKey : '';
     const rowKey = typeof body.id === 'string' ? body.id : '';

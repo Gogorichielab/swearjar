@@ -5,6 +5,9 @@
     "FUNCTIONS_WORKER_RUNTIME": "node",
     "AZURE_TABLES_CONNECTION_STRING": "UseDevelopmentStorage=true",
     "SWEARJAR_TABLE_NAME": "SwearLogs",
-    "DATE_TIME_MODE": "UTC"
+    "DATE_TIME_MODE": "UTC",
+    "REQUIRE_AUTH": "false",
+    "RATE_LIMIT_WINDOW_MS": "60000",
+    "RATE_LIMIT_MAX_REQUESTS": "60"
   }
 }

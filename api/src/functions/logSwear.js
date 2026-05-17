@@ -2,6 +2,7 @@ const crypto = require('node:crypto');
 const { getTableClient } = require('../lib/tableClient');
 const { normalizeTimestamp } = require('../lib/dateUtils');
 const { ok, fail } = require('../lib/http');
+const { resolveUserId } = require('../lib/auth');
 
 function buildPartitionKey(userId, dayKey) {
   return `${userId}|${dayKey}`;
@@ -47,11 +48,14 @@ async function parseBody(request) {
 async function logSwearHandler(request, context) {
   try {
     const body = await parseBody(request);
-    const userId = typeof body.userId === 'string' ? body.userId.trim() : '';
-
-    if (!userId) {
+    const auth = resolveUserId(request, body.userId);
+    if (!auth.userId) {
+      if (auth.error === 'AUTH_REQUIRED') {
+        return fail(401, 'UNAUTHORIZED', 'Authentication is required.');
+      }
       return fail(400, 'VALIDATION_ERROR', 'userId is required and must be a non-empty string.');
     }
+    const userId = auth.userId;
 
     let normalized;
     try {
