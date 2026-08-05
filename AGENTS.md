@@ -148,6 +148,175 @@ The table is **created automatically** by `tableClient.js` on first use (409 Con
 
 ---
 
+## Commit conventions — Conventional Commits
+
+Every commit in this repository **must** follow the
+[Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/)
+specification. This applies to agents and humans alike, and to every branch.
+
+### Format
+
+```
+<type>(<optional scope>): <description>
+
+<optional body>
+
+<optional footer(s)>
+```
+
+- **Type** is required and lowercase.
+- **Scope** is optional, lowercase, and names the area touched (see below).
+- **Description** is a short imperative summary — "add", not "added"/"adds" — no
+  trailing period, and ideally ≤ 72 characters for the whole subject line.
+- **Body** explains *why*, wrapped at ~72 columns, separated by a blank line.
+- **Footers** carry metadata: `Refs: #31`, `Closes: #31`, `BREAKING CHANGE: ...`.
+
+### Allowed types
+
+| Type | Use for |
+|---|---|
+| `feat` | New user-facing capability |
+| `fix` | Bug fix, including security fixes |
+| `docs` | README, this file, or other documentation |
+| `style` | CSS and formatting changes with no behaviour change |
+| `refactor` | Code restructuring with no behaviour change |
+| `perf` | Performance improvement |
+| `test` | Adding or updating tests in `tests/` |
+| `build` | Dependency or packaging changes |
+| `ci` | `.github/workflows/**` changes |
+| `chore` | Maintenance that doesn't fit above |
+| `revert` | Reverting a previous commit |
+
+### Suggested scopes
+
+`frontend`, `api`, `functions`, `swa`, `iac`, `storage`, `auth`, `ui`, `docs`,
+`deps`
+
+### Breaking changes
+
+Mark with a `!` after the type/scope, a `BREAKING CHANGE:` footer, or both. Here,
+"breaking" means a changed API response shape, a `PartitionKey`/`RowKey` format
+change, or a renamed environment variable — all three strand existing data or
+clients.
+
+```
+feat(api)!: return summary counts keyed by ISO week
+
+BREAKING CHANGE: GET /api/summary replaces `calendarDays` with `weeks`.
+The current frontend renders an empty calendar until it is updated.
+```
+
+### Examples
+
+```
+feat(frontend): add jar-switching from the settings dialog
+fix(api): reject logSwear requests with a missing userId
+refactor(api): move day-key math into lib/dateUtils
+test(api): cover the LOCAL date-time mode
+ci(swa): skip build-and-deploy when the SWA token is missing
+chore(deps): bump @azure/data-tables to 13.3.1
+docs(agents): document conventional commit requirements
+```
+
+### Rules of thumb
+
+- One logical change per commit; do not mix a dependency bump with a fix.
+- Frontend and API changes for one feature may share a commit; unrelated changes
+  to both may not.
+- Pull request titles follow the same format, so a squash merge produces a valid
+  conventional commit.
+- Leave Dependabot's generated commit and PR titles alone.
+- Security fixes still get a normal `fix(scope): ...` subject — put the detail in
+  the body, and never put credentials or exploit specifics in the message.
+
+---
+
+## Skills to use
+
+This project expects agents to work with the following skill packs. Install them
+once, then invoke them by name or slash command as the task warrants.
+
+### 1. ponytail — write the least code that works
+
+<https://github.com/DietrichGebert/ponytail>
+
+Claude Code (send as **two separate prompts**):
+
+```
+/plugin marketplace add DietrichGebert/ponytail
+/plugin install ponytail@ponytail
+```
+
+Other agents: copy the matching rules file from that repo — `.cursor/rules/`,
+`.windsurf/rules/`, `.clinerules/`, `.github/copilot-instructions.md`,
+`.kiro/steering/ponytail.md`, or its `AGENTS.md` for everything else.
+
+Commands: `/ponytail [lite|full|ultra|off]`, `/ponytail-review`,
+`/ponytail-audit`, `/ponytail-debt`, `/ponytail-gain`, `/ponytail-help`.
+
+**Use it here:** this repo already forbids new build steps, duplicate response
+helpers, and second sources of truth — ponytail is the same instinct applied
+before you type. Reuse `lib/http.js`, `lib/dateUtils.js`, and `lib/tableClient.js`
+rather than inlining their logic. Run `/ponytail-review` on the diff before
+opening a PR. Minimalism never licenses lowering `authLevel`, widening CORS, or
+skipping input validation — those are explicit prohibitions above.
+
+### 2. marketing skills — copy and presentation
+
+<https://github.com/coreyhaines31/marketingskills>
+
+```bash
+npx skills add coreyhaines31/marketingskills
+# or a subset:
+npx skills add coreyhaines31/marketingskills --skill onboarding copywriting
+```
+
+Claude Code plugin:
+
+```
+/plugin marketplace add coreyhaines31/marketingskills
+/plugin install marketing-skills
+```
+
+**Use it here:** the onboarding dialog, session-code instructions, jar reactions
+("Again?!", "For shame!"), empty states, and README/screenshot presentation are
+all copy work. Use `onboarding` and `copywriting` when the task is "make the
+session code less confusing" or "the reset warning is scary" — the wording is the
+feature. Keep the tone playful but never insulting; the app is an accountability
+tool, not a scold.
+
+### 3. business analysis skills — framing before building
+
+<https://github.com/45ck/business-analysis-skills>
+
+```bash
+git clone https://github.com/45ck/business-analysis-skills.git
+cd business-analysis-skills
+bash install.sh          # installs to ~/.claude/skills/ and ~/.agents/skills/
+```
+
+Project-level instead: `cp -R .claude .agents /path/to/this-repo/`.
+
+Useful entry points: `/business-problem-framing`, `/requirements-elicitation`,
+`/acceptance-criteria-writer`, `/business-rule-extraction`,
+`/assumptions-constraints-log`, `/requirements-quality-check`.
+
+**Use it here:** the day-bucket rule (`DATE_TIME_MODE`, `{userId}|{YYYY-MM-DD}`)
+and the shared-jar semantics are business rules with real edge cases — midnight,
+travel, two people on one code. Frame those with `/business-rule-extraction` and
+write acceptance criteria before changing key formats or aggregation, because
+stored rows cannot be reinterpreted after the fact.
+
+### How they fit together
+
+1. **Frame** with business-analysis skills — what problem, whose, done when?
+2. **Draft** any user-facing wording with the marketing skills.
+3. **Build** under ponytail — the smallest change that ships it.
+4. **Verify** with the local `curl` checks below.
+5. **Commit** using Conventional Commits, one logical change at a time.
+
+---
+
 ## What agents should NOT do
 
 - Do not commit `api/local.settings.json` or any file containing real connection strings or keys.
