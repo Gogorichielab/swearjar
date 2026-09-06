@@ -1,29 +1,57 @@
 name: Maintenance
 
+# The stale job is adopted from the organization workflow template
+#   Gogorichielab/.github → workflow-templates/stale-maintenance.yml
+#   at commit 6599d2688f322bb63a01452e032777d7c0bf6eb9 (merged as dade354).
+#
+# Repository-specific adaptations (see .github/workflows/README.md):
+#   * This repository's approved thresholds are kept: issues 60/7, PRs 30/7.
+#     The starter disables issue aging; SwearJar does not.
+#   * The existing stale messages and no-issue-activity / no-pr-activity labels are kept.
+#   * Scheduled stale processing requires the repository variable
+#     STALE_AUTOMATION_ENABLED='true'; manual dispatch defaults to a dry run.
+#   * cleanup-branches is deliberately NOT part of the template and is unchanged.
+#     It keeps the daily cron; stale keeps the template's weekly Tuesday cron.
+
 on:
   schedule:
-    - cron: '0 4 * * *'    # Daily 04:00 UTC — branch cleanup + stale check
-    - cron: '28 8 * * 2'   # Weekly Tuesday 08:28 UTC — kept for stale alignment
+    - cron: '0 4 * * *'    # Daily 04:00 UTC — branch cleanup
+    - cron: '28 8 * * 2'   # Weekly Tuesday 08:28 UTC — stale processing
   workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Report stale candidates without modifying issues or pull requests
+        type: boolean
+        default: true
 
 permissions:
-  contents: write
-  issues: write
-  pull-requests: write
+  contents: read
+
+concurrency:
+  group: stale-maintenance
+  cancel-in-progress: false
 
 jobs:
   # ────────────────────────────────────────────────────────────
   # JOB 1 — Mark stale issues and PRs
+  # Opt in only after reviewing a dry run: set STALE_AUTOMATION_ENABLED=true.
   # ────────────────────────────────────────────────────────────
   stale:
     name: Mark Stale Issues & PRs
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.schedule == '28 8 * * 2' && vars.STALE_AUTOMATION_ENABLED == 'true')
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 15
+    permissions:
+      issues: write
+      pull-requests: write
 
     steps:
-      - uses: actions/stale@v9
+      - uses: actions/stale@4391f3da665fdf50b6810c1a66712fb9ba21aa93 # v11
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
+          debug-only: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
           stale-issue-message: >
             This issue has been automatically marked as stale because it has
             not had recent activity. It will be closed if no further activity
@@ -38,6 +66,9 @@ jobs:
           days-before-close: 7
           days-before-pr-stale: 30
           days-before-pr-close: 7
+          exempt-issue-labels: 'pinned,security,keep-open'
+          exempt-pr-labels: 'pinned,security,keep-open'
+          operations-per-run: 30
 
   # ────────────────────────────────────────────────────────────
   # JOB 2 — Delete merged codex/ and copilot/ branches
@@ -45,8 +76,11 @@ jobs:
   # ────────────────────────────────────────────────────────────
   cleanup-branches:
     name: Delete Merged Codex & Copilot Branches
+    if: github.event_name == 'workflow_dispatch' || github.event.schedule == '0 4 * * *'
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    permissions:
+      contents: write
 
     steps:
       - name: Install jq

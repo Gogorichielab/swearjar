@@ -322,7 +322,7 @@ stored rows cannot be reinterpreted after the fact.
 - Do not commit `api/local.settings.json` or any file containing real connection strings or keys.
 - Do not change `authLevel` from `function` to `anonymous` in `src/index.js` without an explicit request.
 - Do not introduce a build/bundle step (Webpack, Vite, etc.) without updating the GitHub Actions workflow and `staticwebapp.config.json`.
-- Do not edit `.github/workflows/azure-static-web-apps-purple-forest-00c60bc0f.yml` unless the task explicitly requires CI/CD changes — the SWA deploy token is tied to the workflow filename.
+- Do not edit `.github/workflows/azure-static-web-apps-purple-forest-00c60bc0f.yml` unless the task explicitly requires CI/CD changes — the SWA deploy token is tied to the workflow filename. Workflow rationale and the source workflow-template commit are documented in [`.github/workflows/README.md`](.github/workflows/README.md).
 - Do not add a second HTTP response helper; use `lib/http.js`.
 - Do not add new top-level `app.js` logic — that file is legacy. All new front-end code goes in `frontend/app.js`.
 - Do not change the Table Storage `PartitionKey` format (`{userId}|{YYYY-MM-DD}`) — existing rows depend on it.
@@ -372,9 +372,13 @@ curl "http://localhost:7071/api/summary?userId=test-user"
 
 Deployment is handled by the GitHub Actions workflow on push to `main`.
 
-- `app_location: "/"` — SWA serves from repo root (adjust to `frontend/` if `index.html` moves there permanently).
-- `api_location: ""` — currently blank; set to `"api"` if the workflow should deploy the Functions app via SWA managed API.
-- Secrets live in **GitHub Secrets** (`AZURE_STATIC_WEB_APPS_API_TOKEN_PURPLE_FOREST_00C60BC0F`) and **Azure Function App → Configuration → Application Settings**.
+- `app_location: "frontend"` — SWA serves the static site from `frontend/`.
+- `api_location: "api"` — the Functions app is deployed as the SWA managed API.
+- `output_location: ""` and `skip_app_build: true` — there is no bundler; the frontend ships as-is.
+- Secrets live in **GitHub Secrets** (`AZURE_STATIC_WEB_APPS_API_TOKEN_PURPLE_FOREST_00C60BC0F`, used by both the
+  upload and the PR-close jobs) and **Azure Function App → Configuration → Application Settings**.
+- PR previews are gated on the repository variable `SWA_ENABLE_PREVIEWS`; fork and Dependabot PRs
+  never receive deployment credentials. See [`.github/workflows/README.md`](.github/workflows/README.md).
 
 After deploying, verify:
 1. Frontend loads at the SWA URL.
