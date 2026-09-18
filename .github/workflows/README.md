@@ -10,6 +10,7 @@ changes do not propagate here; they arrive through a separate PR in this reposit
 | --- | --- | --- | --- |
 | Azure Static Web Apps CI/CD | `azure-static-web-apps-purple-forest-00c60bc0f.yml` | `azure-static-web-apps.yml` | active |
 | Maintenance | `maintenance.yml` | `stale-maintenance.yml` (stale job only) | disabled (inactivity) |
+| Delete merged branches | `cleanup-merged-branches.yml` | — not adopted | active |
 | Deploy Azure Function App | `deploy-function-app.yml` | — not adopted | active, `workflow_dispatch` only |
 | Cleanup SWA Preview Environments | `cleanup-swa-preview-environments.yml` | — not adopted | disabled manually |
 
@@ -69,10 +70,24 @@ default of `true`; that maps to the action's `debug-only` mode and changes nothi
 runs additionally require the repository variable `STALE_AUTOMATION_ENABLED=true`, which is
 intentionally unset.
 
-Stale processing runs on the template's weekly Tuesday cron (`28 8 * * 2`); the daily cron
-(`0 4 * * *`) now drives only `cleanup-branches`, matching the intent recorded in the previous
-file's comments. Branch deletion is deliberately outside the template — its age, prefix, and
-merged-status policy is repository-specific — and its script is unchanged.
+Stale processing runs on the template's weekly Tuesday cron (`28 8 * * 2`). The daily cron
+(`0 4 * * *`) and the `cleanup-branches` job it drove have been removed; branch deletion now
+lives in `cleanup-merged-branches.yml`.
+
+## Delete merged branches
+
+`cleanup-merged-branches.yml` replaces the former `cleanup-branches` job in `maintenance.yml`.
+It is shared verbatim across these repositories, so **do not make repository-specific edits
+here** — change it at the source and re-copy.
+
+Behaviour differences from the job it replaces:
+
+- It is not limited to `codex/` and `copilot/` prefixes; **any** branch qualifies.
+- A branch is deleted only when it is not the default or a protected branch, is neither the
+  head nor the base of an open pull request, has a pull request merged at least 14 days ago,
+  and carries no commit the default branch does not already have.
+- It runs monthly (`17 9 1 * *`) rather than daily, and `workflow_dispatch` offers a
+  `dry_run` input that lists candidates without deleting them. **Run the dry run first.**
 
 ## Rollback
 
